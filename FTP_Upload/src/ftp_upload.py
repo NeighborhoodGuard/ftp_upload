@@ -44,7 +44,7 @@ import signal
 
 from localsettings import *
 
-version_string = "1.5.0"
+version_string = "1.5.1"
 
     
 max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
@@ -117,7 +117,7 @@ def get_daydirs(location):
 def connect_to_ftp():
     ftp_connection = None   
     try:
-        ftp_connection = ftplib.FTP(ftp_server,ftp_username,ftp_password,30)
+        ftp_connection = ftplib.FTP(ftp_server,ftp_username,ftp_password,timeout=30)
         logging.debug(ftp_connection.getwelcome())
         logging.debug("current directory is: %s", ftp_connection.pwd())
         logging.debug("changing directory to: %s", ftp_destination)
