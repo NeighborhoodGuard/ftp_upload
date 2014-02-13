@@ -2,7 +2,7 @@
 
 ###Summary###
 
-FTP_Upload is part of software suite from [Neighborhood Guard](http://neighborhoodguard.org) to upload images from IP cameras and organize them into Web pages for easy access and review.
+FTP_Upload is part of a software suite from [Neighborhood Guard](http://neighborhoodguard.org) to upload images from IP cameras and organize them into Web pages for easy access and review.
 
 FTP_Upload is an application written in Python intended run on a machine local to one or more IP cameras.  The camera(s) upload  images to this local machine either via FTP or by using it as a network share.  The local machine acts as a buffer to offload the camera images quickly, then copy them upstream to a server elsewhere on the Internet, as upstream bandwidth and server availability permit.
 
