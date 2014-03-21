@@ -20,11 +20,10 @@
 #
 ################################################################################
 
-import logging
-
 ##################################################################################
 #                                                                                #
-#   "incoming_location" is the location of the uploaded images from the camera  #
+#   "base_loacatation" is the folder where images are stored (end with a slash)  #
+#   "incoming_location" is the location of the uploaded images from the camera   #
 #   "processed_location" is where uploaded images are stored                     #
 #   "ftp_server" is the name of the ftp_server                                   #
 #   "ftp_username" is the username to the ftp server                             #
@@ -34,27 +33,24 @@ import logging
 #                                                                                #
 ##################################################################################
 
-incoming_location = "your_incoming_directory"
-processed_location = "your_processed_directory" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
 	
-ftp_server = "your_ftp_server_name"
-ftp_username = "your_user_name"
-ftp_password = "your_password"
-ftp_destination = "/your_destination_dir" # remember to start with /
+ftp_server = "charingcrosssherwick.org"
+ftp_username = "ftptestcamera"
+ftp_password = "TestingFTP"
+ftp_destination = "/video" # remember to start with / - This folder must exist
+log_destination = "/logfiles/6824Sherwick" # remember to start with / - This folder must existbase_location = "/Users/matis/cameratest/sftp/"
+base_location = "/Users/matis/cameratest/sftp/"  
+incoming_location = base_location + "new"
+processed_location = base_location + "uploaded" # Make sure this directory is NOT below the incomming_location as you will be creating an endlees upload loop
+	
+sftp_server = "charingcrosssherwick.org"
+sftp_username = "charingsherwicksftp"
+sftp_password = "CameraOnStreet"
+sftp_destination = "/home/charingsherwicksftp/video" # remember to start with / - This folder must exist
+
+sleep_err_seconds = 180  #Time to sleep when error (Default = 600)
+sleep_upload = 10		 #Time to sleep for new pictures (Default = 60)   (Useful to change during testing)
 delete=True # Change to True for Purge to work
-	
-	
+		
 retain_days = 6 # number of days to retain local images. (not on the FTP server)
-
-# Logger settings
-#
-
-# logging level for console output
-console_log_level = logging.INFO
-
-# logging level for output to log file(s)
-logfile_log_level = logging.INFO
-
-# max number of previous log files to save, one log file per day
-logfile_max_days = 10
 

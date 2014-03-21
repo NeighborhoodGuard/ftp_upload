@@ -2,6 +2,7 @@
 #
 # Copyright (C) 2013 Neighborhood Guard, Inc.  All rights reserved.
 # Original author: Jesper Jercenoks
+# Some Tweaks by: Howard Matis - March 21, 2014 Added uploading of log files
 # 
 # This file is part of FTP_Upload.
 # 
@@ -41,10 +42,12 @@ import logging.handlers
 import sys
 import traceback
 import signal
+import schedule   #need to get this from gethub
 
 from localsettings import *
+from runtimesettings import *
 
-version_string = "1.5.1"
+version_string = "1.5.1.4"
 
     
 max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
@@ -111,7 +114,7 @@ def get_daydirs(location):
             daydirs.append((dirpath,direc))
     daydirs = sorted(daydirs)
 
-    return daydirs	
+    return daydirs    
 
 
 def connect_to_ftp():
@@ -126,8 +129,9 @@ def connect_to_ftp():
     except ftplib.error_perm, e:
         logging.error("Failed to open FTP connection, %s", e)
         ftp_connection = None
-        logging.info("Sleeping 10 minutes before trying again")
-        time.sleep(600)
+        message = "Sleeping " + str(sleep_err_seconds/60) + " minutes before trying again"
+        logging.info(message)
+        time.sleep(sleep_err_seconds)
     except Exception, e:
         logging.error("Unexpected exception in connect_to_ftp():")
         logging.exception(e)
@@ -153,7 +157,7 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
     if today:
         current_priority_threads += 1
         logging.info("current Priority threads %s", current_priority_threads)
-        
+    
     ftp_connection = connect_to_ftp()
     if ftp_connection != None:
         change_create_ftp_dir(ftp_connection, ftp_dir)
@@ -186,19 +190,66 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
             logging.error("Failed to store ftp file: %s: %s", filepath, e)
             logging.exception(e)
             filehandle.close()
-            logging.info("Sleeping 10 minutes before trying again")
-            time.sleep(600)
+            message = "Sleeping " + str(sleep_err_seconds/60) + " minutes before trying again"
+            logging.info(message)
+            time.sleep(sleep_err_seconds)
                 
         quit_ftp(ftp_connection)
     
     else :
-        time.sleep(600)
+        message = "Sleeping " + str(sleep_err_seconds/60) + " minutes before trying again - general error"
+        logging.info(message)
+        time.sleep(sleep_err_seconds)
     # end if
 
     if today :
         current_priority_threads -= 1
 
     return
+
+def storelogfile(ftp_dir, filepath, filename, today):             #For storing log files
+    global current_priority_threads
+    if today:
+        current_priority_threads += 1
+        logging.info("current Priority threads %s", current_priority_threads)
+    
+    logging.info("In routine storelogfile")
+    logging.info("ftp_dir = %s", ftp_dir)
+    logging.info("filepath = %s", filepath)
+    logging.info("filename = %s", filename)    
+    
+    ftp_connection = connect_to_ftp()
+    if ftp_connection != None:
+        change_create_ftp_dir(ftp_connection, ftp_dir)
+        logging.info("Uploading %s", filepath)
+        try:
+            filehandle = open(filepath, "rb")
+            ftp_connection.storbinary("STOR " + filename, filehandle)
+            filehandle.close()
+            logging.info("file : %s stored on ftp", filename)
+            logging.info("moving file to Storage")
+
+        except Exception, e:
+            logging.error("Failed to store ftp file: %s: %s", filepath, e)
+            logging.exception(e)
+            filehandle.close()
+            message = "Sleeping " + str(sleep_err_seconds/60) + " minutes before trying again"
+            logging.info(message)
+            time.sleep(sleep_err_seconds)
+                
+        quit_ftp(ftp_connection)
+    
+    else :
+        message = "Sleeping " + str(sleep_err_seconds/60) + " minutes before trying again - general error"
+        logging.info(message)
+        time.sleep(sleep_err_seconds)
+    # end if
+
+    if today :
+        current_priority_threads -= 1
+
+    return
+
 
 def storedir(dirpath, ftp_dir, done_dir, today):
     global current_priority_threads
@@ -220,7 +271,6 @@ def storedir(dirpath, ftp_dir, done_dir, today):
         filepath = os.path.join(dirpath, filename)
         donepath = os.path.join(done_dir, filename)
         if os.path.isfile(filepath):
-#            storefile(ftp_dir, filepath, donepath, filename)
 
             current_threads = threading.active_count()
             logging.info("current threads: %s", current_threads)
@@ -338,8 +388,8 @@ def set_up_logging():
         
         # set up the rotating log file handler
         #
-        logfile = logging.handlers.TimedRotatingFileHandler('ftp_upload.log', 
-                when='midnight', backupCount=logfile_max_days)
+        logfile = logging.handlers.TimedRotatingFileHandler(ftp_upload_log, 
+                when= rotate, backupCount=logfile_max_days)
         logfile.setLevel(logfile_log_level)
         logfile.setFormatter(logging.Formatter(
                 '%(asctime)s %(levelname)-8s %(threadName)-10s %(message)s',
@@ -360,17 +410,35 @@ def set_up_logging():
 set_up_logging.not_done = True  # logging should only be set up once, but
                                 # set_up_logging() may be called multiple times when testing
     
-# Flag to stop the main loop for test purposes.
-# Only for manipulation by testing code; always set to False in this file
-#
-terminate_main_loop = False 
+def save_log_file():
+    today = True        #not sure about this value
+    message = "About to save " + ftp_upload_log
+    logging.info(message)
+    dirpath = ""    
+    filepath = os.path.join(dirpath, ftp_upload_log)
+    ftp_dir = log_destination 
+    filename = "ftp_upload-" + datetime.datetime.now().strftime("%y-%m-%d") + ".log"
 
-# Flag to indicate that there were files to be uploaded during main loop
-# Only for use by testing code
-#
-uploads_to_do = False
+    current_threads = threading.active_count()
+    logging.info("current threads: %s", current_threads)
+
+    logging.info("ftp_dir = %s", ftp_dir)
+    logging.info("filepath = %s", filepath)
+    logging.info("filename = %s", filename)
+
+    if (current_threads >= max_threads) or (not today and current_priority_threads>=reserved_priority_threads):
+        # to many threads running already, upload ftp in current thread (don't move forward until upload is done)
+        storelogfile(ftp_dir, filepath, filename, today)
+        current_threads = threading.active_count()
+        logging.info("current threads: %s", current_threads)
+    else:
         
-# encapsulate former if __name__ == "__main__" code in main() function for ease of testing
+        # start new thread
+        logging.info("starting new storelogfile thread")
+        threading.Thread(target=storelogfile, args=(ftp_dir, filepath, filename, today)).start()
+        current_threads = threading.active_count()
+        logging.info("current threads: %s", current_threads)
+    #end if
 #
 def main():
     global uploads_to_do    # for testing only
@@ -378,6 +446,7 @@ def main():
     set_up_logging()
     signal.signal(signal.SIGINT, sighandler)    # dump thread stacks on Ctl-C
     logging.info("Program Started, version %s", version_string)
+    schedule.every(save_log_time).minutes.do(save_log_file)  # save the log_file 
     try:
         mkdir(processed_location)
         # Setup the threads, don't actually run them yet used to test if the threads are alive.
@@ -419,11 +488,12 @@ def main():
                 purge_thread = threading.Thread(target=purge_old_images, args=(processed_location,))
                 purge_thread.start()
                     
-            
-            logging.info("Sleeping 1 minute for upload")
+            schedule.run_pending()          #See if it is time to save log file
+            message = "Sleeping " + str(sleep_upload) + " seconds for upload"
+            logging.info(message)
             logging.info("Time is %s", time.ctime() )          
             try:
-                time.sleep(60) # sleep 1 minute
+                time.sleep(sleep_upload) # sleep
                 
             # hitting Ctl-C to dump the thread stacks will interrupt
             # MainThread's sleep and raise IOError, so catch it here
