@@ -45,6 +45,8 @@ rotate = "midnight"
 ftp_upload_log = 'ftp_upload.log'
 
 # Frequency that the log time is written to server (in minutes)
+# Note information in the log will not be uploaded between the last
+# time the log is written and midnight
 #save_log_time = 1
 save_log_time = 60
 
