@@ -20,6 +20,8 @@
 #
 ################################################################################
 
+# These settings are for experts
+# Most users do not need to modify them
 
 import logging
 
