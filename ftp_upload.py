@@ -47,7 +47,7 @@ import schedule   #need to get this from gethub
 from localsettings import *
 from runtimesettings import *
 
-version_string = "1.5.1.6"
+version_string = "1.5.1.7"
     
 max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
 reserved_priority_threads = 3 # previousdays can only upload multithreaded when running today threads fall below this number.
@@ -421,7 +421,7 @@ def save_log_file():
     filepath = os.path.join(dirpath, yesterday_log)
     ftp_dir = log_destination 
  
-    filename = "ftp_upload-" + todaydate.strftime("%Y-%m-%d") + ".log"      #File name written on server
+    filename = "ftp_upload-" + yesterday.strftime("%Y-%m-%d") + ".log"      #File name written on server
     current_threads = threading.active_count()
     logging.info("current threads: %s", current_threads)
 

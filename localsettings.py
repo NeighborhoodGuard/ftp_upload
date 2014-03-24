@@ -36,7 +36,7 @@
 	
 ftp_server = "charingcrosssherwick.org"
 ftp_username = "ftptestcamera"
-ftp_password = "TestingFTP"
+ftp_password = "ftp password"
 ftp_destination = "/video" # remember to start with / - This folder must exist
 log_destination = "/logfiles/6824Sherwick" # remember to start with / - This folder must existbase_location = "/Users/matis/cameratest/sftp/"
 base_location = "/Users/family/cameratest/sftp/"  
@@ -45,7 +45,7 @@ processed_location = base_location + "uploaded" # Make sure this directory is NO
 	
 sftp_server = "charingcrosssherwick.org"
 sftp_username = "charingsherwicksftp"
-sftp_password = "CameraOnStreet"
+sftp_password = "sftp passowrd"
 sftp_destination = "/home/charingsherwicksftp/video" # remember to start with / - This folder must exist
 
 sleep_err_seconds = 180  #Time to sleep when error (Default = 600)
@@ -53,4 +53,9 @@ sleep_upload = 10		 #Time to sleep for new pictures (Default = 60)   (Useful to 
 delete=True # Change to True for Purge to work
 		
 retain_days = 6 # number of days to retain local images. (not on the FTP server)
+
+# Frequency that the log time is written to server - This should be different for each server
+save_log_interval = 1    #minutes
+save_log_time = "1:00"   #24 hour time running
+
 

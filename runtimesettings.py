@@ -44,9 +44,6 @@ rotate = "midnight"
 # name of log file
 ftp_upload_log = 'ftp_upload.log'
 
-# Frequency that the log time is written to server 
-save_log_interval = 1    #minutes
-save_log_time = "1:00"   #24 hour time running at 1:00 AM
 
 # Flag to stop the main loop for test purposes.
 # Only for manipulation by testing code; always set to False in this file
