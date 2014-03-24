@@ -55,6 +55,7 @@ delete=True # Change to True for Purge to work
 retain_days = 6 # number of days to retain local images. (not on the FTP server)
 
 # Frequency that the log time is written to server - This should be different for each server
+# So server does not have all logs written at the same time
 save_log_interval = 1    #minutes
 save_log_time = "1:00"   #24 hour time running
 
