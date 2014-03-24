@@ -33,7 +33,7 @@
 
 import os.path
 import shutil
-import datetime
+from datetime import datetime, timedelta
 import re
 import time
 import ftplib
@@ -47,8 +47,7 @@ import schedule   #need to get this from gethub
 from localsettings import *
 from runtimesettings import *
 
-version_string = "1.5.1.4"
-
+version_string = "1.5.1.6"
     
 max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
 reserved_priority_threads = 3 # previousdays can only upload multithreaded when running today threads fall below this number.
@@ -412,32 +411,41 @@ set_up_logging.not_done = True  # logging should only be set up once, but
     
 def save_log_file():
     today = True        #not sure about this value
-    message = "About to save " + ftp_upload_log
+    todaydate = datetime.today()
+    yesterday = todaydate - timedelta(1)
+
+    yesterday_log = ftp_upload_log +"." + yesterday.strftime("%Y-%m-%d")    #File name of log file to be saved
+    message = "About to save " + yesterday_log
     logging.info(message)
     dirpath = ""    
-    filepath = os.path.join(dirpath, ftp_upload_log)
+    filepath = os.path.join(dirpath, yesterday_log)
     ftp_dir = log_destination 
-    filename = "ftp_upload-" + datetime.datetime.now().strftime("%y-%m-%d") + ".log"
-
+ 
+    filename = "ftp_upload-" + todaydate.strftime("%Y-%m-%d") + ".log"      #File name written on server
     current_threads = threading.active_count()
     logging.info("current threads: %s", current_threads)
 
     logging.info("ftp_dir = %s", ftp_dir)
     logging.info("filepath = %s", filepath)
     logging.info("filename = %s", filename)
+    
+    if os.path.isfile(yesterday_log):       #Check to see if the log file was written yesterday
 
-    if (current_threads >= max_threads) or (not today and current_priority_threads>=reserved_priority_threads):
-        # to many threads running already, upload ftp in current thread (don't move forward until upload is done)
-        storelogfile(ftp_dir, filepath, filename, today)
-        current_threads = threading.active_count()
-        logging.info("current threads: %s", current_threads)
+        if (current_threads >= max_threads) or (not today and current_priority_threads>=reserved_priority_threads):
+            # to many threads running already, upload ftp in current thread (don't move forward until upload is done)
+            storelogfile(ftp_dir, filepath, filename, today)
+            current_threads = threading.active_count()
+            logging.info("current threads: %s", current_threads)
+        else:
+            
+            # start new thread
+            logging.info("starting new storelogfile thread")
+            threading.Thread(target=storelogfile, args=(ftp_dir, filepath, filename, today)).start()
+            current_threads = threading.active_count()
+            logging.info("current threads: %s", current_threads)
+        #end if
     else:
-        
-        # start new thread
-        logging.info("starting new storelogfile thread")
-        threading.Thread(target=storelogfile, args=(ftp_dir, filepath, filename, today)).start()
-        current_threads = threading.active_count()
-        logging.info("current threads: %s", current_threads)
+        logging.info("Yesterday's log file has not been created: %s", yesterday_log)
     #end if
 #
 def main():
@@ -445,8 +453,10 @@ def main():
     
     set_up_logging()
     signal.signal(signal.SIGINT, sighandler)    # dump thread stacks on Ctl-C
-    logging.info("Program Started, version %s", version_string)
-    schedule.every(save_log_time).minutes.do(save_log_file)  # save the log_file 
+    logging.info("Program ftp_upload.py started, version %s", version_string)
+    
+#    schedule.every(save_log_time).minutes.do(save_log_interval)  # save the log_file 
+    schedule.every().day.at(save_log_time).do(save_log_file)      #save the log file once a day
     try:
         mkdir(processed_location)
         # Setup the threads, don't actually run them yet used to test if the threads are alive.

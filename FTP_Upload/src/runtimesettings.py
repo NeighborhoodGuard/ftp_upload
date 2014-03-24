@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Copyright (C) 2013 Neighborhood Guard, Inc.  All rights reserved.
+# Copyright (C) 2013-4 Neighborhood Guard, Inc.  All rights reserved.
 # Original author: Jesper Jercenoks
 # 
 # This file is part of FTP_Upload.
@@ -44,11 +44,9 @@ rotate = "midnight"
 # name of log file
 ftp_upload_log = 'ftp_upload.log'
 
-# Frequency that the log time is written to server (in minutes)
-# Note information in the log will not be uploaded between the last
-# time the log is written and midnight
-#save_log_time = 1
-save_log_time = 60
+# Frequency that the log time is written to server 
+save_log_interval = 1    #minutes
+save_log_time = "1:00"   #24 hour time running at 1:00 AM
 
 # Flag to stop the main loop for test purposes.
 # Only for manipulation by testing code; always set to False in this file

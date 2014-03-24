@@ -39,7 +39,7 @@ ftp_username = "ftptestcamera"
 ftp_password = "TestingFTP"
 ftp_destination = "/video" # remember to start with / - This folder must exist
 log_destination = "/logfiles/6824Sherwick" # remember to start with / - This folder must existbase_location = "/Users/matis/cameratest/sftp/"
-base_location = "/Users/matis/cameratest/sftp/"  
+base_location = "/Users/family/cameratest/sftp/"  
 incoming_location = base_location + "new"
 processed_location = base_location + "uploaded" # Make sure this directory is NOT below the incomming_location as you will be creating an endlees upload loop
 	
