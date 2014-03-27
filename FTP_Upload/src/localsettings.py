@@ -1,7 +1,8 @@
 ################################################################################
 #
-# Copyright (C) 2013 Neighborhood Guard, Inc.  All rights reserved.
-# Original author: Jesper Jercenoks
+# Copyright (C) 2013-2014 Neighborhood Guard, Inc.  All rights reserved.
+# Original author: Jesper Jurcenoks
+# Maintained by the Neighborhood Guard development team
 # 
 # This file is part of FTP_Upload.
 # 
@@ -34,17 +35,17 @@ import logging
 #                                                                                #
 ##################################################################################
 
-incoming_location = "your_incoming_directory"
-processed_location = "your_processed_directory" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
+incoming_location = "/home/pi/images.incoming"  # the sample values are the defaults for RaspGuard
+processed_location = "/home/pi/images.uploaded" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
+
+ftp_server = "ftp.ng_demo.org"
+ftp_username = "ng_demo_user"
+ftp_password = "ng_demo_passowrd"
+ftp_destination = "/video.yourneighborhood.org" # remember to start with /
+delete=True # must be True for Purge to work
 	
-ftp_server = "your_ftp_server_name"
-ftp_username = "your_user_name"
-ftp_password = "your_password"
-ftp_destination = "/your_destination_dir" # remember to start with /
-delete=True # Change to True for Purge to work
 	
-	
-retain_days = 6 # number of days to retain local images. (not on the FTP server)
+retain_days = 6 # number of days to retain local images (on the Raspberry Pi). (Data retention on the destination FTP server is set somewhere else)
 
 # Logger settings
 #
@@ -57,4 +58,9 @@ logfile_log_level = logging.INFO
 
 # max number of previous log files to save, one log file per day
 logfile_max_days = 10
+
+
+# thread settings
+max_threads = 2 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
+reserved_priority_threads = 1 # previousdays can only upload multithreaded when running today threads fall below this number.
 

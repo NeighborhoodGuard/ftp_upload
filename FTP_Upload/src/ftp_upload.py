@@ -1,8 +1,9 @@
 ################################################################################
 #
-# Copyright (C) 2013 Neighborhood Guard, Inc.  All rights reserved.
-# Original author: Jesper Jercenoks
-# 
+# Copyright (C) 2013-2014 Neighborhood Guard, Inc.  All rights reserved.
+# Original author: Jesper Jurcenoks
+# Maintained by the Neighborhood Guard development team
+#
 # This file is part of FTP_Upload.
 # 
 # FTP_Upload is free software: you can redistribute it and/or modify
@@ -44,11 +45,8 @@ import signal
 
 from localsettings import *
 
-version_string = "1.5.1"
+version_string = "1.5.2"
 
-    
-max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
-reserved_priority_threads = 3 # previousdays can only upload multithreaded when running today threads fall below this number.
 current_priority_threads=0 # global variable shared between threads keeping track of running priority threads.
 
 
@@ -215,7 +213,7 @@ def storedir(dirpath, ftp_dir, done_dir, today):
     
     mkdir(done_dir)
     
-    files = os.listdir(dirpath)
+    files = sorted(os.listdir(dirpath))
     for filename in files:
         filepath = os.path.join(dirpath, filename)
         donepath = os.path.join(done_dir, filename)
