@@ -12,7 +12,7 @@ The FTP_Upload software takes care of transferring these image files to the serv
 
 ###Installation and Configuration###
 
-Program is straditionally installed in directory /ftp_upload
+Program is traditionally installed in directory /ftp_upload
 
 - localsetting.py contains the settings that are particular to your installation - you should localize this file, you should not change the file ftp_upload.py
 
