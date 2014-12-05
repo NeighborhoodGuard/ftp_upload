@@ -48,7 +48,7 @@ import signal
 # Local library part of ftp_upload
 import localsettings
 
-version_string = "1.5.3"
+version_string = "1.5.4"
 
 current_priority_threads=0 # global variable shared between threads keeping track of running priority threads.
 
@@ -126,8 +126,9 @@ def connect_to_ftp():
     except ftplib.error_perm, e:
         logging.error("Failed to open FTP connection, %s", e)
         ftp_connection = None
-        logging.info("Sleeping 10 minutes before trying again")
-        time.sleep(600)
+        message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again"
+        logging.info(message)
+        time.sleep(localsettings.sleep_err_seconds)
     except Exception, e:
         logging.error("Unexpected exception in connect_to_ftp():")
         logging.exception(e)
@@ -186,13 +187,16 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
             logging.error("Failed to store ftp file: %s: %s", filepath, e)
             logging.exception(e)
             filehandle.close()
-            logging.info("Sleeping 10 minutes before trying again")
-            time.sleep(600)
+            message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again"
+            logging.info(message)
+            time.sleep(localsettings.sleep_err_seconds)
                 
         quit_ftp(ftp_connection)
     
     else :
-        time.sleep(600)
+        message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again - general error"
+        logging.info(message)
+        time.sleep(localsettings.sleep_err_seconds)
     # end if
 
     if today :
@@ -202,7 +206,6 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
 
 def storedir(dirpath, ftp_dir, done_dir, today):
     global current_priority_threads
-    global reserved_priority_threads
     
     logging.info("starting storedir")
     logging.info("dirpath = %s", dirpath)
@@ -220,7 +223,6 @@ def storedir(dirpath, ftp_dir, done_dir, today):
         filepath = os.path.join(dirpath, filename)
         donepath = os.path.join(done_dir, filename)
         if os.path.isfile(filepath):
-#            storefile(ftp_dir, filepath, donepath, filename)
 
             current_threads = threading.active_count()
             logging.info("current threads: %s", current_threads)
@@ -423,7 +425,7 @@ def main():
             logging.info("Sleeping 1 minute for upload")
             logging.info("Time is %s", time.ctime() )          
             try:
-                time.sleep(60) # sleep 1 minute
+                 time.sleep(localsettings.sleep_upload) # sleep
                 
             # hitting Ctl-C to dump the thread stacks will interrupt
             # MainThread's sleep and raise IOError, so catch it here
