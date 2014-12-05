@@ -55,8 +55,8 @@ sleep_upload = 60		 #Time to sleep for new pictures (Default = 60)   (Useful to 
 delete=True # must be True for Purge to work
 	
 use_sftp = True
-	
-retain_days = 6 # number of days to retain local images (on the Raspberry Pi). (Data retention on the destination FTP server is set somewhere else)
+
+retain_days = 2 # number of days to retain local images (on the Raspberry Pi). (Data retention on the destination Cloud server is set somewhere else)
 
 # Logger settings
 #
@@ -69,7 +69,6 @@ logfile_log_level = logging.INFO
 
 # max number of previous log files to save, one log file per day
 logfile_max_days = 10
-
 
 # thread settings
 max_threads = 2 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
