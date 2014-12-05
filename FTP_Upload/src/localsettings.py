@@ -25,25 +25,32 @@ import logging
 
 ##################################################################################
 #                                                                                #
-#   "incoming_location" is the location of the uploaded images from the camera  #
+#   "base_loacatation" is the folder where images are stored (end with a slash)  #
+#   "incoming_location" is the location of the uploaded images from the camera   #
 #   "processed_location" is where uploaded images are stored                     #
 #   "ftp_server" is the name of the ftp_server                                   #
 #   "ftp_username" is the username to the ftp server                             #
 #   "ftp_password" is the password to the ftp server                             #
-#   "ftp_destinationn" is the directory on the ftp server for the images         #
+#   "ftp_destination" is the directory on the ftp server for the images         #
 #   ftp_destination must exist (safety check)                                    #
 #                                                                                #
 ##################################################################################
-
-incoming_location = "/home/pi/images.incoming"  # the sample values are the defaults for RaspGuard
-processed_location = "/home/pi/images.uploaded" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
 
 ftp_server = "ftp.ng_demo.org"
 ftp_username = "ng_demo_user"
 ftp_password = "ng_demo_password"
 ftp_destination = "/video.yourneighborhood.org" # remember to start with /
+
+base_location = "/home/pi/" # specific locations are created below this directory
+incoming_location = base_location + "images.incoming"  # the sample values are the defaults for RaspGuard
+processed_location = base_location + "images.uploaded" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
+
+sleep_err_seconds = 600  #Time to sleep when error (Default = 600)
+sleep_upload = 60		 #Time to sleep for new pictures (Default = 60)   (Useful to change during testing)
+
 delete=True # must be True for Purge to work
 	
+use_sftp = True
 	
 retain_days = 6 # number of days to retain local images (on the Raspberry Pi). (Data retention on the destination FTP server is set somewhere else)
 
