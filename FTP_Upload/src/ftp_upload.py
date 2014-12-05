@@ -43,11 +43,12 @@ import sys
 import traceback
 import signal
 
-# 3rd Party libraries not part of default Python and needs to be installed
-import pysftp # pip install pysftp 
-
 # Local library part of ftp_upload
 import localsettings
+
+# 3rd Party libraries not part of default Python and needs to be installed
+if localsettings.use_sftp==True:
+    import pysftp # pip install pysftp 
 
 version_string = "1.6.0"
 
