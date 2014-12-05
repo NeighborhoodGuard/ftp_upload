@@ -40,7 +40,7 @@ processed_location = "/home/pi/images.uploaded" # Make sure this directory is NO
 
 ftp_server = "ftp.ng_demo.org"
 ftp_username = "ng_demo_user"
-ftp_password = "ng_demo_passowrd"
+ftp_password = "ng_demo_password"
 ftp_destination = "/video.yourneighborhood.org" # remember to start with /
 delete=True # must be True for Purge to work
 	
