@@ -39,7 +39,11 @@ import logging
 ftp_server = "ftp.ng_demo.org"
 ftp_username = "ng_demo_user"
 ftp_password = "ng_demo_password"
+
 ftp_destination = "/video.yourneighborhood.org" # remember to start with /
+#for FTP the root is inside the user dir, for SFTP the root is master root
+#eg. FTP ftp_destination = "/video.yourneighborhood.org"
+#eg. SFTP ftp_destination = "/home/myuser/video.yourneighborhood.org"
 
 base_location = "/home/pi/" # specific locations are created below this directory
 incoming_location = base_location + "images.incoming"  # the sample values are the defaults for RaspGuard
