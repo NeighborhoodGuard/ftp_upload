@@ -5,17 +5,17 @@
 # Maintained by the Neighborhood Guard development team
 #
 # This file is part of FTP_Upload.
-# 
+#
 # FTP_Upload is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # FTP_Upload is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with FTP_Upload.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -30,7 +30,7 @@
 ######################################################################################
 
 
-
+# Standard Python Libraries
 import os.path
 import shutil
 import datetime
@@ -43,9 +43,12 @@ import sys
 import traceback
 import signal
 
+# 3rd Party libraries not part of default Python and needs to be installed
+
+# Local library part of ftp_upload
 from localsettings import *
 
-version_string = "1.5.2"
+version_string = "1.5.3"
 
 current_priority_threads=0 # global variable shared between threads keeping track of running priority threads.
 
@@ -63,7 +66,6 @@ def rmdir(dirname):
     except:
         pass
 
-        
 def change_create_ftp_dir(ftp_connection, dirname):
     # dirname is relative or absolute
     
@@ -98,7 +100,7 @@ def dir2date(indir):
     return (year, month, day)
 
 
-def get_daydirs(location):        
+def get_daydirs(location):
     daydirlist = os.listdir(location)
 
     daydirs=[]
@@ -109,17 +111,17 @@ def get_daydirs(location):
             daydirs.append((dirpath,direc))
     daydirs = sorted(daydirs)
 
-    return daydirs	
+    return daydirs
 
 
 def connect_to_ftp():
     ftp_connection = None   
     try:
-        ftp_connection = ftplib.FTP(ftp_server,ftp_username,ftp_password,timeout=30)
+        ftp_connection = ftplib.FTP(localsettings.ftp_server,localsettings.ftp_username,localsettings.ftp_password,timeout=30)
         logging.debug(ftp_connection.getwelcome())
         logging.debug("current directory is: %s", ftp_connection.pwd())
-        logging.debug("changing directory to: %s", ftp_destination)
-        ftp_connection.cwd(ftp_destination)
+        logging.debug("changing directory to: %s", localsettings.ftp_destination)
+        ftp_connection.cwd(localsettings.ftp_destination)
         logging.debug("current directory is: %s", ftp_connection.pwd())
     except ftplib.error_perm, e:
         logging.error("Failed to open FTP connection, %s", e)
@@ -223,7 +225,7 @@ def storedir(dirpath, ftp_dir, done_dir, today):
             current_threads = threading.active_count()
             logging.info("current threads: %s", current_threads)
 
-            if (current_threads >= max_threads) or (not today and current_priority_threads>=reserved_priority_threads):
+            if (current_threads >= localsettings.max_threads) or (not today and current_priority_threads>=localsettings.reserved_priority_threads):
                 # to many threads running already, upload ftp in current thread (don't move forward until upload is done)
                 storefile(ftp_dir, filepath, donepath, filename, today)
                 current_threads = threading.active_count()
@@ -272,9 +274,9 @@ def purge_old_images(purge_dir):
     global files_purged
     # Purge directories in Purge_dir, does not delete purge_dir itself
     purge_daydirs=get_daydirs(purge_dir)
-    logging.debug("list of directories to be purged: %s", purge_daydirs[0:-retain_days])
+    logging.debug("list of directories to be purged: %s", purge_daydirs[0:-localsettings.retain_days])
     files_purged = False
-    for purge_daydir in purge_daydirs[0:-retain_days]:
+    for purge_daydir in purge_daydirs[0:-localsettings.retain_days]:
         (dirpath, unused_direc) = purge_daydir
         logging.info("purging directory %s", dirpath)
         deltree(dirpath)
@@ -293,8 +295,8 @@ def storeday(daydir, today=False):
     try:
         (dirpath, direc) = daydir
         logging.info("processing directory %s", direc)
-        ftp_dir = ftp_destination + "/" + direc
-        done_dir = os.path.join(processed_location, direc)
+        ftp_dir = localsettings.ftp_destination + "/" + direc
+        done_dir = os.path.join(localsettings.processed_location, direc)
         storedir(dirpath, ftp_dir, done_dir, today)
     except Exception, e:
         logging.exception(e)
@@ -337,8 +339,8 @@ def set_up_logging():
         # set up the rotating log file handler
         #
         logfile = logging.handlers.TimedRotatingFileHandler('ftp_upload.log', 
-                when='midnight', backupCount=logfile_max_days)
-        logfile.setLevel(logfile_log_level)
+                when='midnight', backupCount=localsettings.logfile_max_days)
+        logfile.setLevel(localsettings.logfile_log_level)
         logfile.setFormatter(logging.Formatter(
                 '%(asctime)s %(levelname)-8s %(threadName)-10s %(message)s',
                 '%m-%d %H:%M:%S'))
@@ -347,7 +349,7 @@ def set_up_logging():
         # define a Handler which writes messages equal to or greater than
         # console_log_level to the sys.stderr
         console = logging.StreamHandler()
-        console.setLevel(console_log_level)
+        console.setLevel(localsettings.console_log_level)
         # set a format which is simpler for console use
         formatter = logging.Formatter('%(levelname)-8s %(message)s')
         # tell the handler to use this format
@@ -377,7 +379,7 @@ def main():
     signal.signal(signal.SIGINT, sighandler)    # dump thread stacks on Ctl-C
     logging.info("Program Started, version %s", version_string)
     try:
-        mkdir(processed_location)
+        mkdir(localsettings.processed_location)
         # Setup the threads, don't actually run them yet used to test if the threads are alive.
         processtoday_thread = threading.Thread(target=storeday, args=())
         process_previous_days_thread = threading.Thread(target=storedays, args=())
@@ -387,7 +389,7 @@ def main():
         
         while True:
             
-            daydirs = get_daydirs(incoming_location)
+            daydirs = get_daydirs(localsettings.incoming_location)
             
             #reverse sort the days so that today is first
             daydirs = sorted(daydirs, reverse=True)
@@ -414,7 +416,7 @@ def main():
 
 
             if not purge_thread.is_alive():
-                purge_thread = threading.Thread(target=purge_old_images, args=(processed_location,))
+                purge_thread = threading.Thread(target=purge_old_images, args=(localsettings.processed_location,))
                 purge_thread.start()
                     
             
