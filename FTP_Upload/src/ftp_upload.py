@@ -48,7 +48,7 @@ import signal
 # Local library part of ftp_upload
 import localsettings
 
-version_string = "1.5.4"
+version_string = "1.5.5"
 
 current_priority_threads=0 # global variable shared between threads keeping track of running priority threads.
 
@@ -66,16 +66,16 @@ def rmdir(dirname):
     except:
         pass
 
-def change_create_ftp_dir(ftp_connection, dirname):
+def change_create_server_dir(server_connection, dirname):
     # dirname is relative or absolute
     
-    if ftp_connection != None:
+    if server_connection != None:
         try:
-            ftp_connection.cwd(dirname)
+            server_connection.cwd(dirname)
         except ftplib.error_perm :
             try:
-                ftp_connection.mkd(dirname)
-                ftp_connection.cwd(dirname)     
+                server_connection.mkd(dirname)
+                server_connection.cwd(dirname)
             except Exception, e:
                 logging.warning("can't make ftp directory %s" % dirname)
                 logging.exception(e)
@@ -114,34 +114,34 @@ def get_daydirs(location):
     return daydirs
 
 
-def connect_to_ftp():
-    ftp_connection = None   
+def connect_to_server():
+    server_connection = None   
     try:
-        ftp_connection = ftplib.FTP(localsettings.ftp_server,localsettings.ftp_username,localsettings.ftp_password,timeout=30)
-        logging.debug(ftp_connection.getwelcome())
-        logging.debug("current directory is: %s", ftp_connection.pwd())
+        server_connection = ftplib.FTP(localsettings.ftp_server,localsettings.ftp_username,localsettings.ftp_password,timeout=30)
+        logging.debug(server_connection.getwelcome())
+        logging.debug("current directory is: %s", server_connection.pwd())
         logging.debug("changing directory to: %s", localsettings.ftp_destination)
-        ftp_connection.cwd(localsettings.ftp_destination)
-        logging.debug("current directory is: %s", ftp_connection.pwd())
+        server_connection.cwd(localsettings.ftp_destination)
+        logging.debug("current directory is: %s", server_connection.pwd())
     except ftplib.error_perm, e:
         logging.error("Failed to open FTP connection, %s", e)
-        ftp_connection = None
+        server_connection = None
         message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again"
         logging.info(message)
         time.sleep(localsettings.sleep_err_seconds)
     except Exception, e:
-        logging.error("Unexpected exception in connect_to_ftp():")
+        logging.error("Unexpected exception in connect_to_server():")
         logging.exception(e)
-        if ftp_connection != None:
-            ftp_connection.close()  # close any connection to cloud server
-        ftp_connection = None
+        if server_connection != None:
+            server_connection.close()  # close any connection to cloud server
+        server_connection = None
         
-    return ftp_connection
+    return server_connection
 
-def quit_ftp(ftp_connection):
-    if ftp_connection != None :
+def quit_server(server_connection):
+    if server_connection != None :
         try:
-            ftp_connection.quit()
+            server_connection.quit()
             logging.debug("ftp connection successfully closed")
         except Exception, e:
             #logging.warning("Exception during FTP.quit():", e)
@@ -155,13 +155,13 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
         current_priority_threads += 1
         logging.info("current Priority threads %s", current_priority_threads)
         
-    ftp_connection = connect_to_ftp()
-    if ftp_connection != None:
-        change_create_ftp_dir(ftp_connection, ftp_dir)
+    server_connection = connect_to_server()
+    if server_connection != None:
+        change_create_server_dir(server_connection, ftp_dir)
         logging.info("Uploading %s", filepath)
         try:
             filehandle = open(filepath, "rb")
-            ftp_connection.storbinary("STOR " + filename, filehandle)
+            server_connection.storbinary("STOR " + filename, filehandle)
             filehandle.close()
             logging.info("file : %s stored on ftp", filename)
             logging.info("moving file to Storage")
@@ -191,7 +191,7 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
             logging.info(message)
             time.sleep(localsettings.sleep_err_seconds)
                 
-        quit_ftp(ftp_connection)
+        quit_server(server_connection)
     
     else :
         message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again - general error"
@@ -212,9 +212,9 @@ def storedir(dirpath, ftp_dir, done_dir, today):
     logging.info("ftp_dir = %s", ftp_dir)
     logging.info("done_dir = %s", done_dir)
 
-    ftp_connection = connect_to_ftp()
-    change_create_ftp_dir(ftp_connection, ftp_dir)
-    quit_ftp(ftp_connection)
+    server_connection = connect_to_server()
+    change_create_server_dir(server_connection, ftp_dir)
+    quit_server(server_connection)
     
     mkdir(done_dir)
     
