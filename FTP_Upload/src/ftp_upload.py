@@ -46,7 +46,7 @@ import signal
 # 3rd Party libraries not part of default Python and needs to be installed
 
 # Local library part of ftp_upload
-from localsettings import *
+import localsettings
 
 version_string = "1.5.3"
 
