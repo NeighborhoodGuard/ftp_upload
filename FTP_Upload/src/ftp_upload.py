@@ -321,7 +321,7 @@ def deltree(deldir):
             rmdir(filepath)
         else:
             logging.info("FTP_UPLOAD:deleting %s", filepath)
-            if delete == False :
+            if localsettings.delete == False :
                 logging.info("FTP_UPLOAD:would have deleted %s here - to really delete change delete flag to True", filepath)
             else :
                 os.remove(filepath)
