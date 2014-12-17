@@ -36,11 +36,12 @@ import logging
 #                                                                                #
 ##################################################################################
 
-ftp_server = "ftp.ng_demo.org"
-ftp_username = "ng_demo_user"
-ftp_password = "ng_demo_password"
+ftp_server = "ftp.ng_demo.org"    # Always change this
+ftp_username = "ng_demo_user"     # and this 
+ftp_password = "ng_demo_password" # and this
 
-ftp_destination = "/video.yourneighborhood.org" # remember to start with /
+ftp_destination = "/video.yourneighborhood.org" # you must change this
+# remember to start with /
 #for FTP the root is inside the user dir, for SFTP the root is master root
 #eg. FTP ftp_destination = "/video.yourneighborhood.org"
 #eg. SFTP ftp_destination = "/home/myuser/video.yourneighborhood.org"
