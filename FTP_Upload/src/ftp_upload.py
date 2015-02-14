@@ -42,6 +42,7 @@ import logging.handlers
 import sys
 import traceback
 import signal
+import getopt
 
 # Local library part of ftp_upload
 import localsettings
@@ -431,7 +432,15 @@ def set_up_logging():
         set_up_logging.not_done = False       
 set_up_logging.not_done = True  # logging should only be set up once, but
                                 # set_up_logging() may be called multiple times when testing
+
+def help():
+    print "ftpupload.py [-h] [-s] "
+    print "-h, --help       This help"
+    print "-s, --status     Upload status to the cloud server and exit"
+    print "no options       Continously upload images to the cloud server"
     
+    return
+                                
 # Flag to stop the main loop for test purposes.
 # Only for manipulation by testing code; always set to False in this file
 #
@@ -444,7 +453,8 @@ uploads_to_do = False
         
 # encapsulate former if __name__ == "__main__" code in main() function for ease of testing
 #
-def main():
+    
+def continous_upload():
     global uploads_to_do    # for testing only
     
     set_up_logging()
@@ -509,5 +519,29 @@ def main():
         logging.exception(e)
         raise   # rethrow so unit test code will know something went wrong
 
+        
+def main(argv):
+
+    try:
+      options, args = getopt.getopt(argv, "hs",["status", "help"])
+    except getopt.GetoptError:
+        help()
+        sys.exit(2)
+    for option, arg in options:
+        if option in ("-h", "--help"):
+            help()
+            sys.exit()
+        if option in ("-s", "--status"):
+            print "Status"
+            sys.exit()
+        else:
+            print "unhandled option"
+            sys.exit()
+    #end for
+    print "no option"
+    continous_upload()
+
+    return
+    
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
