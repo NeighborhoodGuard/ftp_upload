@@ -43,6 +43,10 @@ import sys
 import traceback
 import signal
 import getopt
+import socket
+import platform
+import subprocess
+import string
 
 # Local library part of ftp_upload
 import localsettings
@@ -520,6 +524,57 @@ def continous_upload():
         raise   # rethrow so unit test code will know something went wrong
 
         
+    return
+
+def get_local_ip():
+
+    if platform.system()=="Windows":
+        p = subprocess.Popen('ipconfig', shell = False, stdout=subprocess.PIPE)
+        p.wait()
+        rawtxt = p.stdout.read()
+#        print rawtxt
+
+        wifi_interface = re.search('\n.*adapter Wireless Network Connection:.*?IPv4 Address. . . . . . . . . . . : (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',rawtxt, flags=re.DOTALL)
+        wifi_ip = wifi_interface.groups(0)[0]
+
+        lan_interface = re.search('\n.*adapter Local Area Connection:.*?IPv4 Address. . . . . . . . . . . : (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',rawtxt, flags=re.DOTALL)
+        lan_ip = lan_interface.groups(0)[0]
+    else:
+        p = subprocess.Popen("""ifconfig wlan0 | awk '/addr:/ {print $2;}'| sed "s/addr://1" """, shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        wifi_ip = string.strip(p.stdout.read())
+
+        p = subprocess.Popen("""ifconfig eth0 | awk '/addr:/ {print $2;}'| sed "s/addr://1" """, shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        lan_ip = string.strip(p.stdout.read())
+  
+    return wifi_ip, lan_ip
+    
+def get_os():
+    if platform.system()=="Windows":
+        os = "{system} {release}".format(system=platform.system(), release=platform.release())
+    else:
+        p = subprocess.Popen("""cat /etc/os-release | grep PRETTY_NAME | sed 's/PRETTY_NAME="//g' | sed 's/"//g'""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        os = string.strip(p.stdout.read())
+    
+    return os
+    
+def status():
+
+    wifi_ip, lan_ip = get_local_ip()
+    hostname=socket.gethostname()
+    
+    statusstr="{time}\n".format(time=time.ctime())
+    statusstr+="Name: {name}\n".format(name=hostname)
+    statusstr+="OS: {os}\n".format(os=get_os())
+    statusstr+="Wi-FI   : {wifiip}\n".format(wifiip=wifi_ip)
+    statusstr+="Ethernet: {lanip}\n".format(lanip=lan_ip)
+
+    print statusstr
+    return    
+        
+        
 def main(argv):
 
     try:
@@ -532,7 +587,7 @@ def main(argv):
             help()
             sys.exit()
         if option in ("-s", "--status"):
-            print "Status"
+            status()
             sys.exit()
         else:
             print "unhandled option"
