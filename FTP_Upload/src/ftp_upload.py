@@ -592,6 +592,22 @@ def status():
     statusstr+="Ethernet: {lanip}\n".format(lanip=lan_ip)
 
     print statusstr
+    
+    statusfilename = "heartbeat.status"
+    statusfile = open(statusfilename, "w")
+    statusfile.write(statusstr)
+    statusfile.close()
+    
+    ftp_dir = localsettings.ftp_destination + "/status/" + hostname
+    
+    server_connection = connect_to_server()
+    if server_connection != None:
+        if putfile(server_connection, ftp_dir, statusfilename, statusfilename) :
+            print "putfile successful"
+        else:
+            print "putfile error"
+        quit_server(server_connection)    
+    
     return    
         
         
