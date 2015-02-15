@@ -212,9 +212,42 @@ def quit_server(server_connection):
     logging.debug("FTP_UPLOAD:Ending quit_server()")
     return
     
-def storefile(ftp_dir, filepath, donepath, filename, today):
-    logging.debug("FTP_UPLOAD:Starting storefile()")
+def putfile(server_connection, ftp_dir, filepath, filename):
+    # server_connection - established ftp or sftp connection
+    # ftp_dir - the directory on the ftp server where the files are stored
+    # filepath - the directory and filename to the local file where the file is coming from
+    # filename - filename of the file to upload, this is used on the ftp server, locally it is contained in the filepath
 
+    change_create_server_dir(server_connection, ftp_dir)
+    logging.info("FTP_UPLOAD:Uploading %s", filepath)
+    try:
+        if localsettings.use_sftp==True:
+            server_connection.put(filepath, remotepath=ftp_dir+"/"+filename, preserve_mtime=True)
+        else:
+            filehandle = open(filepath, "rb")
+            server_connection.storbinary("STOR " + filename, filehandle)
+            filehandle.close()
+        #endif
+        logging.info("FTP_UPLOAD:file : %s stored on ftp", filename)
+        success=True
+    except Exception, e:
+        logging.error("FTP_UPLOAD:Failed to store ftp file: %s: %s", filepath, e)
+        logging.exception(e)
+        filehandle.close()
+        success=False
+        
+    return success
+
+    
+def storefile(ftp_dir, filepath, donepath, filename, today):
+    # ftp_dir - the directory on the ftp server where the files are stored
+    # filepath - the directory and filename to the local file where the file is coming from
+    # donepath - this is where the file goes once it has been uploaded.
+    # filename - filename of the file to upload, this is used on the ftp server, locally it is contained in the filepath
+    # today - flag telling process the priority to assign to the work.
+    
+    logging.debug("FTP_UPLOAD:Starting storefile()")
+    
     global current_priority_threads
     if today:
         current_priority_threads += 1
@@ -222,17 +255,7 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
         
     server_connection = connect_to_server()
     if server_connection != None:
-        change_create_server_dir(server_connection, ftp_dir)
-        logging.info("FTP_UPLOAD:Uploading %s", filepath)
-        try:
-            if localsettings.use_sftp==True:
-                server_connection.put(filepath, remotepath=ftp_dir+"/"+filename, preserve_mtime=True)
-            else:
-                filehandle = open(filepath, "rb")
-                server_connection.storbinary("STOR " + filename, filehandle)
-                filehandle.close()
-            #endif
-            logging.info("FTP_UPLOAD:file : %s stored on ftp", filename)
+        if putfile(server_connection, ftp_dir, filepath, filename) :
             logging.info("FTP_UPLOAD:moving file to Storage")
 
             try:
@@ -252,10 +275,7 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
                 logging.warning("FTP_UPLOAD:can't move file %s, possible sharing violation", filepath )
                 logging.exception(e)
 
-        except Exception, e:
-            logging.error("FTP_UPLOAD:Failed to store ftp file: %s: %s", filepath, e)
-            logging.exception(e)
-            filehandle.close()
+        else:
             message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again"
             logging.info(message)
             time.sleep(localsettings.sleep_err_seconds)
