@@ -650,7 +650,7 @@ def status():
     statusstr+="OS: {os}\n".format(os=get_os())
     statusstr+="Wi-FI   : {wifiip}\n".format(wifiip=wifi_ip)
     statusstr+="Ethernet: {lanip}\n".format(lanip=lan_ip)
-    statusstr+="connection\n"
+    statusstr+="Connection\n"
     statusstr+=" Camera  : {cameraconnection}   Wi-Fi    : {wificonnection}\n".format(cameraconnection=cameraconnection, wificonnection=wificonnection)
     statusstr+=" Internet: {internetconnection}   Dreamhost: {dreamhostconnection}\n".format(internetconnection=internetconnection, dreamhostconnection=dreamhostconnection)
     statusstr+="Pending Upload: {daycount} Day(s) & {imagecount} Images\n".format(daycount=daycount, imagecount=imagecount)
