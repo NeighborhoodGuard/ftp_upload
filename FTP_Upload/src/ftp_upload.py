@@ -55,7 +55,7 @@ import localsettings
 if localsettings.use_sftp==True:
     import pysftp # pip install pysftp 
 
-version_string = "1.6.0"
+version_string = "1.7.0"
 
 current_priority_threads=0 # global variable shared between threads keeping track of running priority threads.
 
@@ -579,18 +579,82 @@ def get_os():
         os = string.strip(p.stdout.read())
     
     return os
+
+def ping(host):
+    if platform.system()=="Windows":
+        up = (os.system("ping -n 1 " + host) == 0)
+    else:
+        up = (os.system("ping -c 1 " + host) == 0)
+
+    if up:
+        connection="Good"
+    else :
+        connection="Bad "
+        
+    return connection
+
+def get_gateway_ip():
+
+    if platform.system()=="Windows":
+        p = subprocess.Popen("""route print 0.0.0.0""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        route_print_str = string.strip(p.stdout.read())
+        
+        searchresult=re.search("\n.*0.0.0.0\s*(\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}.)",route_print_str,flags=re.DOTALL)
+        gateway_ip=searchresult.groups(0)[0]
+        
+    else :
+        p = subprocess.Popen("""route -n | grep "^0.0.0.0" | awk '/0.0.0.0/ {print $2;}'""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        gateway_ip = string.strip(p.stdout.read())
+
+    
+    return gateway_ip
+    
+def get_free_disk():
+    if platform.system()=="Windows":
+        p = subprocess.Popen("""dir""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        dir_str = string.strip(p.stdout.read())
+        
+        searchresult=re.search("\n.*Dir\(s\)  ([0-9,]*)",dir_str,flags=re.DOTALL)
+        freedisktext=searchresult.groups(0)[0]
+        freedisk=int(freedisktext.replace(",",""))
+        freediskstring=str(freedisk/1024/1024/1024)+"Gb"
+    else:
+        p = subprocess.Popen("""df -h / | grep "/dev/root" | sed 's/\/dev\/root *[0-9.]*[GMK] *[0-9.]*[GMK] *//1' | sed 's/ *[0-9]*% \///1'""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        freediskstring = string.strip(p.stdout.read())
+    
+    
+    return freediskstring
+    
     
 def status():
 
     wifi_ip, lan_ip = get_local_ip()
     hostname=socket.gethostname()
     
+    cameraconnection=ping("camera") #put a line in the hostfile to point camera at the camera's ip address
+    wificonnection=ping(get_gateway_ip())
+    internetconnection=ping("www.google.com")
+    dreamhostconnection=ping(localsettings.ftp_server)
+    
+    daycount=len(os.listdir(localsettings.incoming_location))
+    imagecount=sum([len(files) for r, d, files in os.walk(localsettings.incoming_location)])
+     
+    freedisk=get_free_disk()
+     
     statusstr="{time}\n".format(time=time.ctime())
     statusstr+="Name: {name}\n".format(name=hostname)
     statusstr+="OS: {os}\n".format(os=get_os())
     statusstr+="Wi-FI   : {wifiip}\n".format(wifiip=wifi_ip)
     statusstr+="Ethernet: {lanip}\n".format(lanip=lan_ip)
-
+    statusstr+="connection\n"
+    statusstr+=" Camera  : {cameraconnection}   Wi-Fi    : {wificonnection}\n".format(cameraconnection=cameraconnection, wificonnection=wificonnection)
+    statusstr+=" Internet: {internetconnection}   Dreamhost: {dreamhostconnection}\n".format(internetconnection=internetconnection, dreamhostconnection=dreamhostconnection)
+    statusstr+="Pending Upload: {daycount} Day(s) & {imagecount} Images\n".format(daycount=daycount, imagecount=imagecount)
+    statusstr+="Free Disk: {freedisk}\n".format(freedisk=freedisk)
     print statusstr
     
     statusfilename = "heartbeat.status"
