@@ -665,6 +665,10 @@ def status():
     ftp_dir = localsettings.ftp_destination + "/status/" + hostname
     
     server_connection = connect_to_server()
+    ftp_dir = localsettings.ftp_destination + "/status/"
+    change_create_server_dir(server_connection, ftp_dir)
+    ftp_dir += hostname
+    
     if server_connection != None:
         if putfile(server_connection, ftp_dir, statusfilename, statusfilename) :
             print "putfile successful"
