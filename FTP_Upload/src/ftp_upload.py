@@ -148,7 +148,7 @@ def connect_to_server():
             logging.debug("FTP_UPLOAD:changing directory to: %s", localsettings.ftp_destination)
             server_connection.cwd(localsettings.ftp_destination)
             logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd)
-        except SSHExection, e:
+        except SSHExeption, e:
             if e=="Error reading SSH protocol banner" :
                 logging.info("timeout connecting to SSH on cloud server - Server overloaded?")
             else :
