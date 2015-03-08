@@ -29,16 +29,16 @@
 # needs to be done to untangle this, and make the code portable to non-Windows
 # testing systems
 #
-ftp_testing_root = "test_system_ftp_root_directory" 
+ftp_testing_root = "C:/fup_testing" 
 
 # Set up the testing values for the ftp_upload global vars
 #
 sep = "/"
-incoming_location = ftp_testing_root + sep + "test_system_incoming_directory"
-processed_location = ftp_testing_root + sep + "test_system_processed_directory" 
+incoming_location = ftp_testing_root + sep + "incoming"
+processed_location = ftp_testing_root + sep + "processed" 
     
-ftp_server = "test_ftp_server_hostname"
-ftp_username = "test_ftp_server_username"
-ftp_password = "test_ftp_server_password"
-ftp_destination = sep + "test_ftp_server_destination_directory"
+ftp_server = "localhost"
+ftp_username = "ng"
+ftp_password = "ng"
+ftp_destination = sep + "destination"
 
