@@ -46,7 +46,7 @@ the incoming, processed and FTP destination directories, will be
 created under the `ftp_testing_root` as needed by the test code or 
 by FTP_Upload during the test runs.
 
-The `ftp_server` can probably be left set to the default `localhost`,
+The `ftp_server` can be left set to the default `localhost`,
 since the FTP server is expected to be running directly on the test
 machine.
 
@@ -57,13 +57,13 @@ up on the local FTP server.
 ### Local FTP Server ###
 
 As mentioned above, there must be an FTP server set up on the test
-machine so that FTP_Upload can actually upload files using FTP.
+machine so that FTP_Upload can actually transfer files using FTP.
 For a Windows test machine, we recommend using FileZilla Server
 for ease of installation and configuration, though
 any FTP server should work.
 
 You will need to set up an account on the FTP server for the test code
-that has the same user name and password as have been set in 
+that has the same user name and password as have been configured in 
 `testsettings.py`.  Set the account's home directory to be the same as
 the `ftp_testing_root` you configured in `testsettings.py`, and give
 the account all permissions on that directory, e.g., read, write,
@@ -77,14 +77,15 @@ Therefore, these two commands must be available in the execution path
 (`PATH` variable) of the test process.  If the tests are being run
 under Windows, these are not part of the standard command set.
 
-When running under Windows, the simplest way to set this up is
+When running under Windows, the simplest way to 
+get these commands into the execution path is
 to install Git (which you probably already installed in order to 
 download the FTP_Upload repository), and then to run the tests from the
 `Git Bash` command line.  `Git Bash` includes a very complete set of
 Unix/Linux utilities in its execution path, including `ls` and `sed`.
 You can also run the tests
 from the Windows command line by adding the appropriate path to your
-execution path, e.g., `\Program Files\Git\bin`.
+execution path, e.g., `C:\Program Files\Git\bin`.
 
 Lastly, Windows versions of `ls` and `sed` utilities can also be found in the 
 [UnxUtils package available from SourceForge](unxutils.sourceforge.net).
