@@ -33,6 +33,7 @@ import re
 import logging
 import random
 import testsettings
+import sys
 
 class ForceDate(datetime.date):
     """Force datetime.date.today() to return a specifiable date for testing
@@ -265,24 +266,28 @@ class Test(unittest.TestCase):
         pass
     
     def testUploadOfTodayAndPrevious(self):
+        logging.info("=============== %s ================", sys._getframe().f_code.co_name)
         self.uploadAndValidate(today=True, genFiles=True)
             
     def testUploadOfPreviousDays(self):
+        logging.info("=============== %s ================", sys._getframe().f_code.co_name)
         self.uploadAndValidate(today=False, genFiles=True)
             
     def testNoWorkToDo(self):
+        logging.info("=============== %s ================", sys._getframe().f_code.co_name)
         self.uploadAndValidate(today=True, genFiles=False)
         
     def uploadAndValidate(self, today, genFiles):
         
-        # shell command to do recursive ls then use sed to strip out the date and time.
+        # shell command to do recursive ls then use sed to strip out the timestamp
+        # (this includes both the "MMM DD HH:MM" form and the "MMM DD  YYYY" form).
         # Strip out the link count as well, as it seems to be broken sometimes
-        ls_sed = "ls -lR | sed -e \"s/[A-Z][a-z][a-z] [0-9 ][0-9] [0-9][0-9]:[0-9][0-9] //\" -e \"s/\\(^..........\\) \\+[0-9]\\+/\\1/\""
+        ls_sed = "ls -lR | sed -e \"s/[A-Z][a-z][a-z] [0-9 ][0-9] \\{1,2\\}[0-9][0-9]:\\{0,1\\}[0-9][0-9] //\" -e \"s/\\(^..........\\) \\+[0-9]\\+/\\1/\""
         
-        # capture the original state of the incoming files tree (empty)
+        # capture the initial state of the incoming files tree (empty)
         incoming = re.sub("/", "\\\\", ftp_upload.incoming_location)
         exitStatus = subprocess.call("cd " + incoming + " & "+ls_sed+" > ..\\orig.ls", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # captured initial empty incoming file tree
 
         # Build the incoming directories and files to simulate the cameras
         # dropping files into the ftp_upload machine
@@ -295,10 +300,10 @@ class Test(unittest.TestCase):
             buildImages(ftp_upload.incoming_location, "2013-06-29", "downhill", "10-00-00", 1, 10)
             buildImages(ftp_upload.incoming_location, "2013-06-29", "uphill", "10-00-02", 1, 10)
 
-        # capture the state of the incoming files tree
+        # capture the state of the incoming files tree after being populated
         incoming = re.sub("/", "\\\\", ftp_upload.incoming_location)
         exitStatus = subprocess.call("cd " + incoming + " & "+ls_sed+" > ..\\incoming.ls", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # captured incoming file tree before processing
            
         if today:
             ForceDate.setForcedDate(datetime.date(2013,7,1))
@@ -319,36 +324,37 @@ class Test(unittest.TestCase):
         # capture the state of the processed files tree
         processed = re.sub("/", "\\\\", ftp_upload.processed_location)
         exitStatus = subprocess.call("cd " + processed + " & "+ls_sed+" > ..\\processed.ls", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # captured processed file tree after processing
         
         # capture the state of the cloud server files tree
         cloud = re.sub("/", "\\\\", ftp_testing_root + ftp_upload.ftp_destination)
         exitStatus = subprocess.call("cd " + cloud + " & "+ls_sed+" > ..\\cloud.ls", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # captured server file tree after FTPing files
         
         # capture the final state of the incoming files tree
         incoming = re.sub("/", "\\\\", ftp_upload.incoming_location)
         exitStatus = subprocess.call("cd " + incoming + " & ls -lR > ..\\final.ls", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # captured incoming file tree after processing
               
-        # compare the original input tree to the processed tree
+        # compare populated input tree before processing to processed tree
         testRoot = re.sub("/", "\\\\", ftp_testing_root)
         exitStatus = subprocess.call("cd " + testRoot + " & diff incoming.ls processed.ls > processed.diff", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # processed file tree == populated incoming tree
        
-        # compare the original input tree to the cloud server tree
+        # compare populated input tree to the cloud server tree
         testRoot = re.sub("/", "\\\\", ftp_testing_root)
         exitStatus = subprocess.call("cd " + testRoot + " & diff incoming.ls cloud.ls > cloud.diff", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # cloud server tree == populated incoming tree
        
         # compare the initial state of the incoming tree with the final state;
         # they should be identical and empty
         testRoot = re.sub("/", "\\\\", ftp_testing_root)
         exitStatus = subprocess.call("cd " + testRoot + " & diff orig.ls final.ls > final.diff", shell=True)
-        assert exitStatus == 0
+        assert exitStatus == 0  # final incoming tree == initial empty tree
          
 
     def testStorefileWithMissingDoneDirectory(self):
+        logging.info("=============== %s ================", sys._getframe().f_code.co_name)
         date = "2010-02-01"
         loc = "downhill"
         filename = "21-22-00-00999.jpg"
