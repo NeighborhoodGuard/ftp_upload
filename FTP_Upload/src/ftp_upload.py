@@ -182,6 +182,7 @@ def connect_to_server():
             time.sleep(localsettings.sleep_err_seconds)
         except Exception, e:
             logging.error("FTP_UPLOAD:Unexpected exception in connect_to_server():")
+            logging.error("FTP_UPLOAD: localsettings.ftp_server = %s", localsettings.ftp_server)
             logging.exception(e)
             if server_connection != None:
                 server_connection.close()  # close any connection to cloud server
@@ -435,7 +436,7 @@ def set_up_logging():
         
         # set up the rotating log file handler
         #
-        logfile = logging.handlers.TimedRotatingFileHandler('ftp_upload.log', 
+        logfile = logging.handlers.TimedRotatingFileHandler(os.path.join(localsettings.base_location,"ftp_upload",'ftp_upload.log'),
                 when='midnight', backupCount=localsettings.logfile_max_days)
         logfile.setLevel(localsettings.logfile_log_level)
         logfile.setFormatter(logging.Formatter(
@@ -625,7 +626,12 @@ def get_free_disk():
         p = subprocess.Popen("""df -h / | grep "/dev/root" | sed 's/\/dev\/root *[0-9.]*[GMK] *[0-9.]*[GMK] *//1' | sed 's/ *[0-9]*% \///1'""", shell = True, stdout=subprocess.PIPE)
         p.wait()
         freediskstring = string.strip(p.stdout.read())
+        
+        p = subprocess.Popen("""df -h | grep "/dev/sda1" | sed 's/\/dev\/sda1 *[0-9.]*[GMK] *[0-9.]*[GMK] *//1' | sed 's/ *[0-9]*% \/mnt\/ngdata//1'""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        freediskhddstring = string.strip(p.stdout.read())
     
+        freediskstring = freediskstring + "   " + freediskhddstring
     
     return freediskstring
     
