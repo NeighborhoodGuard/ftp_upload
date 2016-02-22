@@ -46,7 +46,10 @@ ftp_destination = "/video.yourneighborhood.org" # you must change this
 #eg. FTP ftp_destination = "/video.yourneighborhood.org"
 #eg. SFTP ftp_destination = "/home/myuser/video.yourneighborhood.org"
 
-base_location = "/home/pi/" # specific locations are created below this directory
+# specific locations are created below this directory
+base_location = "/home/pi/"  # Default for Images on SD Card
+#base_location = "/mnt/ngdata/" # Default for Images on Harddisk
+
 incoming_location = base_location + "images.incoming"  # the sample values are the defaults for RaspGuard
 processed_location = base_location + "images.uploaded" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
 
