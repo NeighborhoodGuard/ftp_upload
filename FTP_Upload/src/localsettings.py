@@ -25,7 +25,7 @@ import logging
 
 ##################################################################################
 #                                                                                #
-#   "base_loacatation" is the folder where images are stored (end with a slash)  #
+#   "base_location" is the folder where images are stored (end with a slash)  #
 #   "incoming_location" is the location of the uploaded images from the camera   #
 #   "processed_location" is where uploaded images are stored                     #
 #   "ftp_server" is the name of the ftp_server                                   #
@@ -42,9 +42,7 @@ ftp_password = "ng_demo_password" # and this
 
 ftp_destination = "/video.yourneighborhood.org" # you must change this
 # remember to start with /
-#for FTP the root is inside the user dir, for SFTP the root is master root
-#eg. FTP ftp_destination = "/video.yourneighborhood.org"
-#eg. SFTP ftp_destination = "/home/myuser/video.yourneighborhood.org"
+#for this is the relative path from your home directory
 
 # specific locations are created below this directory
 base_location = "/home/pi/"  # Default for Images on SD Card
@@ -59,6 +57,9 @@ sleep_upload = 60		 #Time to sleep for new pictures (Default = 60)   (Useful to 
 delete=True # must be True for Purge to work
 	
 use_sftp = True
+
+if use_sftp==True:
+  ftp_destination = "/home/" + ftp_username + ftp_destination
 
 retain_days = 2 # number of days to retain local images (on the Raspberry Pi). (Data retention on the destination Cloud server is set somewhere else)
 
