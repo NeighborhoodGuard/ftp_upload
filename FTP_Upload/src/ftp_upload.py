@@ -605,7 +605,7 @@ def get_gateway_ip():
         gateway_ip=searchresult.groups(0)[0]
         
     else :
-        p = subprocess.Popen("""route -n | grep "^0.0.0.0" | awk '/0.0.0.0/ {print $2;}'""", shell = True, stdout=subprocess.PIPE)
+        p = subprocess.Popen("""route -n | grep -m 1 "^0.0.0.0" | awk '/0.0.0.0/ {print $2;}'""", shell = True, stdout=subprocess.PIPE)
         p.wait()
         gateway_ip = string.strip(p.stdout.read())
 
@@ -627,7 +627,7 @@ def get_free_disk():
         p.wait()
         freediskstring = string.strip(p.stdout.read())
         
-        p = subprocess.Popen("""df -h | grep "/dev/sda1" | sed 's/\/dev\/sda1 *[0-9.]*[GMK] *[0-9.]*[GMK] *//1' | sed 's/ *[0-9]*% \/mnt\/ngdata//1'""", shell = True, stdout=subprocess.PIPE)
+        p = subprocess.Popen("""df -h | grep "/mnt/ngdata" | sed 's/\/dev\/sda2 *[0-9.]*[GMK] *[0-9.]*[GMK] *//1' | sed 's/ *[0-9]*% \/mnt\/ngdata//1'""", shell = True, stdout=subprocess.PIPE)
         p.wait()
         freediskhddstring = string.strip(p.stdout.read())
     
@@ -637,6 +637,8 @@ def get_free_disk():
     
     
 def status():
+
+    print "running ftp_upload:status"
 
     wifi_ip, lan_ip = get_local_ip()
     hostname=socket.gethostname()
