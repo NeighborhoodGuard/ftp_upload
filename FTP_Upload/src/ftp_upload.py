@@ -482,7 +482,6 @@ uploads_to_do = False
 def continous_upload():
     global uploads_to_do    # for testing only
     
-    set_up_logging()
     signal.signal(signal.SIGINT, sighandler)    # dump thread stacks on Ctl-C
     logging.info("FTP_UPLOAD:Program Started, version %s", version_string)
     try:
@@ -688,6 +687,7 @@ def status():
         
         
 def main(argv=None):
+    set_up_logging()
 
     try:
       options, args = getopt.getopt(argv, "hs",["status", "help"])
