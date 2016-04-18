@@ -1,6 +1,7 @@
 ################################################################################
+################################################################################
 #
-# Copyright (C) 2013-2014 Neighborhood Guard, Inc.  All rights reserved.
+# Copyright (C) 2013-2016 Neighborhood Guard, Inc.  All rights reserved.
 # Original author: Jesper Jurcenoks
 # Maintained by the Neighborhood Guard development team
 #
@@ -47,18 +48,165 @@ import socket
 import platform
 import subprocess
 import string
+import itertools
+import mimetools
+import mimetypes
+import urllib
+import urllib2
 
 # Local library part of ftp_upload
 import localsettings
+
 
 # 3rd Party libraries not part of default Python and needs to be installed
 if localsettings.use_sftp==True:
     import pysftp # pip install pysftp 
 
-version_string = "1.7.0"
+version_string = "1.8.0"
 
 current_priority_threads=0 # global variable shared between threads keeping track of running priority threads.
 
+try:
+    use_http_post = localsettings.use_http_post
+except AttributeError:
+    logging.warning("http post variables not found")
+    use_http_post = False
+ 
+
+
+#########################################################################
+#
+# MultiPartForm copied from https://pymotw.com/2/urllib2/#uploading-files
+#
+# License: https://pymotw.com/2/about.html
+# The source code included here is copyright Doug Hellmann and licensed under the BSD license.
+#
+# Copyright Doug Hellmann, All Rights Reserved
+#
+# Permission to use, copy, modify, and distribute this software and its documentation for any purpose and
+# without fee is hereby granted, provided that the above copyright notice appear in all copies and that both
+# that copyright notice and this permission notice appear in supporting documentation, and that the name of
+# Doug Hellmann not be used in advertising or publicity pertaining to distribution of the software without
+# specific, written prior permission.
+#
+# DOUG HELLMANN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL DOUG HELLMANN BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER 
+# IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH
+#  THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+#########################################################################
+
+class MultiPartForm(object):
+    """Accumulate the data to be used when posting a form."""
+
+    def __init__(self):
+        self.form_fields = []
+        self.files = []
+        self.boundary = mimetools.choose_boundary()
+        return
+    
+    def get_content_type(self):
+        return 'multipart/form-data; boundary=%s' % self.boundary
+
+    def add_field(self, name, value):
+        """Add a simple field to the form data."""
+        self.form_fields.append((name, value))
+        return
+
+    def add_file(self, fieldname, filename, fileHandle, mimetype=None):
+        """Add a file to be uploaded."""
+        body = fileHandle.read()
+        if mimetype is None:
+            mimetype = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+        self.files.append((fieldname, filename, mimetype, body))
+        return
+    
+    def __str__(self):
+        """Return a string representing the form data, including attached files."""
+        # Build a list of lists, each containing "lines" of the
+        # request.  Each part is separated by a boundary string.
+        # Once the list is built, return a string where each
+        # line is separated by '\r\n'.  
+        parts = []
+        part_boundary = '--' + self.boundary
+        
+        # Add the form fields
+        parts.extend(
+            [ part_boundary,
+              'Content-Disposition: form-data; name="%s"' % name,
+              '',
+              value,
+            ]
+            for name, value in self.form_fields
+            )
+        
+        # Add the files to upload
+        parts.extend(
+            [ part_boundary,
+              'Content-Disposition: file; name="%s"; filename="%s"' % \
+                 (field_name, filename),
+              'Content-Type: %s' % content_type,
+              '',
+              body,
+            ]
+            for field_name, filename, content_type, body in self.files
+            )
+        
+        # Flatten the list and add closing boundary marker,
+        # then return CR+LF separated data
+        flattened = list(itertools.chain(*parts))
+        flattened.append('--' + self.boundary + '--')
+        flattened.append('')
+        return '\r\n'.join(flattened)
+
+
+def http_post(filepath, camera, date=None, status=False):
+
+    logging.info("trying to upload %s via http" % filepath)
+
+    # create a password manager
+    password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+
+    # Add the username and password.
+    # If we knew the realm, we could use it instead of None.
+    password_mgr.add_password(None, localsettings.http_post_url, localsettings.http_username, localsettings.http_password)
+
+    handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+
+    # create "opener" (OpenerDirector instance)
+    opener = urllib2.build_opener(handler)
+
+    urllib2.install_opener(opener)
+    
+    form = MultiPartForm()
+    form.add_field('camera', camera)
+    if status:
+        form.add_field('status', 'true')
+    
+    if date<>None:
+        form.add_field('date', date)
+        
+    form.add_field('submit', 'submit')
+
+    # Add the file
+    form.add_file('file', os.path.basename(filepath), fileHandle=open(filepath))
+
+    request = urllib2.Request(localsettings.http_post_url)
+
+    body = str(form)
+    request.add_header('Content-type', form.get_content_type())
+    request.add_header('Content-length', len(body))
+    request.add_data(body)
+    
+    logging.debug("data ='%s'" % body)
+    response = urllib2.urlopen(request)
+    
+    response_code = response.getcode()
+    logging.info("http response: %s" % response_code)
+
+    return response_code
+ 
 
 def mkdir(dirname):
     try:
@@ -77,29 +225,32 @@ def change_create_server_dir(server_connection, dirname):
     logging.debug("FTP_UPLOAD:Starting change_create_server_dir()")
 
     # dirname is relative or absolute
-    
-    if server_connection != None:
-        if localsettings.use_sftp == True:
-            try:
-                server_connection.cwd(dirname)
-            except IOError, e :
+
+    if use_http_post:
+        logging.debug("no creating is directories when using http_post")
+    else:
+        if server_connection != None:
+            if localsettings.use_sftp == True:
                 try:
-                    server_connection.mkdir(dirname)
                     server_connection.cwd(dirname)
-                except Exception, e:
-                    logging.warning("FTP_UPLOAD:can't make sftp directory %s" % dirname)
-                    logging.exception(e)
-        else:
-            try:
-                server_connection.cwd(dirname)
-            except ftplib.error_perm :
+                except IOError, e :
+                    try:
+                        server_connection.mkdir(dirname)
+                        server_connection.cwd(dirname)
+                    except Exception, e:
+                        logging.warning("FTP_UPLOAD:can't make sftp directory %s" % dirname)
+                        logging.exception(e)
+            else:
                 try:
-                    server_connection.mkd(dirname)
                     server_connection.cwd(dirname)
-                except Exception, e:
-                    logging.warning("FTP_UPLOAD:can't make ftp directory %s" % dirname)
-                    logging.exception(e)
-        #endif
+                except ftplib.error_perm :
+                    try:
+                        server_connection.mkd(dirname)
+                        server_connection.cwd(dirname)
+                    except Exception, e:
+                        logging.warning("FTP_UPLOAD:can't make ftp directory %s" % dirname)
+                        logging.exception(e)
+            #endif
     logging.debug("FTP_UPLOAD:Ending change_create_server_dir()")
     return
 
@@ -138,61 +289,70 @@ def get_daydirs(location):
 
 def connect_to_server():
     logging.debug("FTP_UPLOAD:Starting connect_to_server()")
+
     server_connection = None
-    if localsettings.use_sftp==True:
-        # SFTP Version
-        try:
-            server_connection = pysftp.Connection(localsettings.ftp_server, username=localsettings.ftp_username,password=localsettings.ftp_password)
-            logging.debug("FTP_UPLOAD: Connected to %s", localsettings.ftp_server)
-            logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd)
-            logging.debug("FTP_UPLOAD:changing directory to: %s", localsettings.ftp_destination)
-            server_connection.cwd(localsettings.ftp_destination)
-            logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd)
-        except pysftp.SSHException, e:
-            if e=="Error reading SSH protocol banner" :
-                logging.info("timeout connecting to SSH on cloud server - Server overloaded?")
-            else :
+    if use_http_post :
+        logging.debug("No connect to server when using http POST")
+    else:
+        
+        if localsettings.use_sftp==True:
+            # SFTP Version
+            try:
+                server_connection = pysftp.Connection(localsettings.ftp_server, username=localsettings.ftp_username,password=localsettings.ftp_password)
+                logging.debug("FTP_UPLOAD: Connected to %s", localsettings.ftp_server)
+                logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd)
+                logging.debug("FTP_UPLOAD:changing directory to: %s", localsettings.ftp_destination)
+                server_connection.cwd(localsettings.ftp_destination)
+                logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd)
+            except pysftp.SSHException, e:
+                if e=="Error reading SSH protocol banner" :
+                    logging.info("timeout connecting to SSH on cloud server - Server overloaded?")
+                else :
+                    logging.error("FTP_UPLOAD:Unexpected exception in connect_to_server():")
+                    logging.exception(e)
+                if server_connection != None:
+                    server_connection.close()  # close any connection to cloud server
+                server_connection = None
+            except Exception, e:
                 logging.error("FTP_UPLOAD:Unexpected exception in connect_to_server():")
                 logging.exception(e)
-            if server_connection != None:
-                server_connection.close()  # close any connection to cloud server
-            server_connection = None
-        except Exception, e:
-            logging.error("FTP_UPLOAD:Unexpected exception in connect_to_server():")
-            logging.exception(e)
-            if server_connection != None:
-                server_connection.close()  # close any connection to cloud server
-            server_connection = None
-        #endif
-            
-    else:
-        # FTP Version
-        try:
-            server_connection = ftplib.FTP(localsettings.ftp_server,localsettings.ftp_username,localsettings.ftp_password,timeout=30)
-            logging.debug(server_connection.getwelcome())
-            logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd())
-            logging.debug("FTP_UPLOAD:changing directory to: %s", localsettings.ftp_destination)
-            server_connection.cwd(localsettings.ftp_destination)
-            logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd())
-        except ftplib.error_perm, e:
-            logging.error("FTP_UPLOAD:Failed to open FTP connection, %s", e)
-            server_connection = None
-            message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again"
-            logging.info(message)
-            time.sleep(localsettings.sleep_err_seconds)
-        except Exception, e:
-            logging.error("FTP_UPLOAD:Unexpected exception in connect_to_server():")
-            logging.error("FTP_UPLOAD: localsettings.ftp_server = %s", localsettings.ftp_server)
-            logging.exception(e)
-            if server_connection != None:
-                server_connection.close()  # close any connection to cloud server
-            server_connection = None
-     # endif
+                if server_connection != None:
+                    server_connection.close()  # close any connection to cloud server
+                server_connection = None
+            #endif
+                
+        else:
+            # FTP Version
+            try:
+                server_connection = ftplib.FTP(localsettings.ftp_server,localsettings.ftp_username,localsettings.ftp_password,timeout=30)
+                logging.debug(server_connection.getwelcome())
+                logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd())
+                logging.debug("FTP_UPLOAD:changing directory to: %s", localsettings.ftp_destination)
+                server_connection.cwd(localsettings.ftp_destination)
+                logging.debug("FTP_UPLOAD:current directory is: %s", server_connection.pwd())
+            except ftplib.error_perm, e:
+                logging.error("FTP_UPLOAD:Failed to open FTP connection, %s", e)
+                server_connection = None
+                message = "Sleeping " + str(localsettings.sleep_err_seconds/60) + " minutes before trying again"
+                logging.info(message)
+                time.sleep(localsettings.sleep_err_seconds)
+            except Exception, e:
+                logging.error("FTP_UPLOAD:Unexpected exception in connect_to_server():")
+                logging.error("FTP_UPLOAD: localsettings.ftp_server = %s", localsettings.ftp_server)
+                logging.exception(e)
+                if server_connection != None:
+                    server_connection.close()  # close any connection to cloud server
+                server_connection = None
+         # endif
+    #endif
     logging.debug("FTP_UPLOAD:Ending connect_to_server()")   
     return server_connection
 
 def quit_server(server_connection):
     logging.debug("FTP_UPLOAD:Starting quit_server()")
+
+    # no need for "if use_http_post" here as server_connection is None when using http POST and if it is not then lets close it.
+
     if server_connection != None :
         if localsettings.use_sftp==True:
             # SFTP Version
@@ -219,23 +379,37 @@ def putfile(server_connection, ftp_dir, filepath, filename):
     # filepath - the directory and filename to the local file where the file is coming from
     # filename - filename of the file to upload, this is used on the ftp server, locally it is contained in the filepath
 
-    change_create_server_dir(server_connection, ftp_dir)
-    logging.info("FTP_UPLOAD:Uploading %s", filepath)
-    try:
-        if localsettings.use_sftp==True:
-            server_connection.put(filepath, remotepath=ftp_dir+"/"+filename, preserve_mtime=True)
+    if use_http_post:
+        logging.info("FTP_UPLOAD:Uploading %s", filepath)
+        pathlist = os.path.dirname(filepath).split(os.sep)
+        
+        camera = pathlist[-1]
+        date = pathlist[-2]
+        
+        if http_post(filepath, camera, date) == 200:
+            success=True
         else:
-            filehandle = open(filepath, "rb")
-            server_connection.storbinary("STOR " + filename, filehandle)
+            success=False
+    
+    else:
+        
+        change_create_server_dir(server_connection, ftp_dir)
+        logging.info("FTP_UPLOAD:Uploading %s", filepath)
+        try:
+            if localsettings.use_sftp==True:
+                server_connection.put(filepath, remotepath=ftp_dir+"/"+filename, preserve_mtime=True)
+            else:
+                filehandle = open(filepath, "rb")
+                server_connection.storbinary("STOR " + filename, filehandle)
+                filehandle.close()
+            #endif
+            logging.info("FTP_UPLOAD:file : %s stored on ftp", filename)
+            success=True
+        except Exception, e:
+            logging.error("FTP_UPLOAD:Failed to store ftp file: %s: %s", filepath, e)
+            logging.exception(e)
             filehandle.close()
-        #endif
-        logging.info("FTP_UPLOAD:file : %s stored on ftp", filename)
-        success=True
-    except Exception, e:
-        logging.error("FTP_UPLOAD:Failed to store ftp file: %s: %s", filepath, e)
-        logging.exception(e)
-        filehandle.close()
-        success=False
+            success=False
         
     return success
 
@@ -255,7 +429,7 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
         logging.info("FTP_UPLOAD:current Priority threads %s", current_priority_threads)
         
     server_connection = connect_to_server()
-    if server_connection != None:
+    if server_connection != None or use_http_post == True :
         if putfile(server_connection, ftp_dir, filepath, filename) :
             logging.info("FTP_UPLOAD:moving file to Storage")
 
@@ -552,7 +726,6 @@ def get_local_ip():
         p = subprocess.Popen('ipconfig', shell = False, stdout=subprocess.PIPE)
         p.wait()
         rawtxt = p.stdout.read()
-#        print rawtxt
 
         wifi_interface = re.search('\n.*adapter Wireless Network Connection:.*?IPv4 Address. . . . . . . . . . . : (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})',rawtxt, flags=re.DOTALL)
         wifi_ip = wifi_interface.groups(0)[0]
@@ -637,7 +810,7 @@ def get_free_disk():
     
 def status():
 
-    print "running ftp_upload:status"
+    logging.info("running ftp_upload:status")
 
     wifi_ip, lan_ip = get_local_ip()
     hostname=socket.gethostname()
@@ -662,27 +835,32 @@ def status():
     statusstr+=" Internet: {internetconnection}   Dreamhost: {dreamhostconnection}\n".format(internetconnection=internetconnection, dreamhostconnection=dreamhostconnection)
     statusstr+="Pending Upload: {daycount} Day(s) & {imagecount} Images\n".format(daycount=daycount, imagecount=imagecount)
     statusstr+="Free Disk: {freedisk}\n".format(freedisk=freedisk)
-    print statusstr
+    logging.info(statusstr)
     
     statusfilename = "heartbeat.status"
     statusfile = open(statusfilename, "w")
     statusfile.write(statusstr)
     statusfile.close()
     
-    ftp_dir = localsettings.ftp_destination + "/status/" + hostname
+    if use_http_post == True:
     
-    server_connection = connect_to_server()
-    ftp_dir = localsettings.ftp_destination + "/status/"
-    change_create_server_dir(server_connection, ftp_dir)
-    ftp_dir += hostname
-    
-    if server_connection != None:
-        if putfile(server_connection, ftp_dir, statusfilename, statusfilename) :
-            print "putfile successful"
-        else:
-            print "putfile error"
-        quit_server(server_connection)    
-    
+        http_post(statusfilename, hostname, status=True)
+        
+    else :
+        ftp_dir = localsettings.ftp_destination + "/status/" + hostname
+        
+        server_connection = connect_to_server()
+        ftp_dir = localsettings.ftp_destination + "/status/"
+        change_create_server_dir(server_connection, ftp_dir)
+        ftp_dir += hostname
+        
+        if server_connection != None:
+            if putfile(server_connection, ftp_dir, statusfilename, statusfilename) :
+                logging.info("putfile successful")
+            else:
+                logging.info("putfile error")
+            quit_server(server_connection)    
+        
     return    
         
         
@@ -702,10 +880,10 @@ def main(argv=None):
             status()
             sys.exit()
         else:
-            print "unhandled option"
+            logging.error("unhandled option")
             sys.exit()
     #end for
-    print "no option"
+    logging.info("no option")
     continous_upload()
 
     return
