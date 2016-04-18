@@ -40,7 +40,7 @@ ftp_server = "ftp.ng_demo.org"    # Always change this
 ftp_username = "ng_demo_user"     # and this 
 ftp_password = "ng_demo_password" # and this
 
-ftp_destination = "/video.yourneighborhood.org" # you must change this
+ftp_destination = "/communityview.yourneighborhood.org" # you must change this
 # remember to start with /
 # this is the relative path from your home directory
 
@@ -61,6 +61,12 @@ use_sftp = False
 if use_sftp==True:
   ftp_destination = "/home/" + ftp_username + ftp_destination
 
+use_http_post = False # True is recommended but requires that communityview_upload_image.py is installed on the server
+http_username =  "web_user"
+http_password = "web_users_password" 
+http_post_url = "http://communityview.yourneighborhood.org/communityview/communityview_upload_image.py"
+
+  
 retain_days = 2 # number of days to retain local images (on the Raspberry Pi). (Data retention on the destination Cloud server is set somewhere else)
 
 # Logger settings
