@@ -200,9 +200,13 @@ def http_post(filepath, camera, date=None, status=False):
     request.add_data(body)
     
     logging.debug("data ='%s'" % body)
-    response = urllib2.urlopen(request)
-    
-    response_code = response.getcode()
+    try:
+        response = urllib2.urlopen(request)
+        response_code = response.getcode()
+    except urllib2.URLError, e:
+        logging.warning("urlopen error '%s'" % e)
+        response_code = 599
+        
     logging.info("http response: %s" % response_code)
 
     return response_code
@@ -388,9 +392,10 @@ def putfile(server_connection, ftp_dir, filepath, filename):
         
         if http_post(filepath, camera, date) == 200:
             success=True
+            logging.info("FTP_UPLOAD:file : %s stored via http post", filename)
         else:
             success=False
-    
+            logging.info("FTP_UPLOAD:file : error during http post upload of %s", filename)
     else:
         
         change_create_server_dir(server_connection, ftp_dir)
