@@ -62,8 +62,8 @@ if use_sftp==True:
   ftp_destination = "/home/" + ftp_username + ftp_destination
 
 use_http_post = False # True is recommended but requires that communityview_upload_image.py is installed on the server
-http_username =  "web_user"
-http_password = "web_users_password" 
+http_username =  "web_user" #notice this is the username and password of the web-user e.g. the same as people viewing the video
+http_password = "web_users_password" # and thus NOT the password used by ftp or sftp to upload images.
 http_post_url = "http://communityview.yourneighborhood.org/communityview/communityview_upload_image.py"
 
   
