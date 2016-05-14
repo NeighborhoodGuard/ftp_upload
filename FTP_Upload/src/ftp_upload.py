@@ -607,6 +607,12 @@ def dumpstacks():
 def sighandler(signum, frame):
     dumpstacks()
 
+def make_logfile_basename():
+
+    logfile_basename = os.path.join(localsettings.base_location, "ftp_upload", 'ftp_upload.log')
+
+    return  logfile_basename
+
 def set_up_logging():
     if set_up_logging.not_done:
         # get the root logger and set its level to DEBUG
@@ -615,7 +621,7 @@ def set_up_logging():
         
         # set up the rotating log file handler
         #
-        logfile = logging.handlers.TimedRotatingFileHandler(os.path.join(localsettings.base_location,"ftp_upload",'ftp_upload.log'),
+        logfile = logging.handlers.TimedRotatingFileHandler(make_logfile_basename(),
                 when='midnight', backupCount=localsettings.logfile_max_days)
         logfile.setLevel(localsettings.logfile_log_level)
         logfile.setFormatter(logging.Formatter(
@@ -638,9 +644,10 @@ set_up_logging.not_done = True  # logging should only be set up once, but
                                 # set_up_logging() may be called multiple times when testing
 
 def help():
-    print "ftpupload.py [-h] [-s] "
+    print "ftpupload.py [-h] [-s] [-l]"
     print "-h, --help       This help"
     print "-s, --status     Upload status to the cloud server and exit"
+    print "-l, --log        Upload yesterdays logfile and exit"
     print "no options       Continously upload images to the cloud server"
     
     return
@@ -804,14 +811,29 @@ def get_free_disk():
         p.wait()
         freediskstring = string.strip(p.stdout.read())
         
-        p = subprocess.Popen("""df -h | grep "/mnt/ngdata" | sed 's/\/dev\/sda2 *[0-9.]*[GMK] *[0-9.]*[GMK] *//1' | sed 's/ *[0-9]*% \/mnt\/ngdata//1'""", shell = True, stdout=subprocess.PIPE)
+        p = subprocess.Popen("""df -h /mnt/ngdata | grep "/mnt/ngdata" | sed 's/\/dev\/sda. *[0-9.]*[GMK] *[0-9.]*[GMK] *//1' | sed 's/ *[0-9]*% \/mnt\/ngdata//1'""", shell = True, stdout=subprocess.PIPE)
         p.wait()
         freediskhddstring = string.strip(p.stdout.read())
     
         freediskstring = freediskstring + "   " + freediskhddstring
     
     return freediskstring
-    
+
+def get_day_image_count() :
+    if platform.system()=="Windows":
+        daycount=len(os.listdir(localsettings.incoming_location))
+        imagecount=sum([len(files) for r, d, files in os.walk(localsettings.incoming_location)])
+    else:
+        p = subprocess.Popen("""find $BASELOCATION/images.incoming/. -type f -name '*.jpg' | wc -l""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        daycount = string.strip(p.stdout.read())
+        
+        p = subprocess.Popen("""ls -1 $BASELOCATION/images.incoming | wc -l""", shell = True, stdout=subprocess.PIPE)
+        p.wait()
+        imagecount = string.strip(p.stdout.read())
+        
+        
+    return (daycount, imagecount)
     
 def status():
 
@@ -825,8 +847,7 @@ def status():
     internetconnection=ping("www.google.com")
     dreamhostconnection=ping(localsettings.ftp_server)
     
-    daycount=len(os.listdir(localsettings.incoming_location))
-    imagecount=sum([len(files) for r, d, files in os.walk(localsettings.incoming_location)])
+    (daycount, imagecount) = get_day_image_count()
      
     freedisk=get_free_disk()
      
@@ -861,19 +882,52 @@ def status():
         
         if server_connection != None:
             if putfile(server_connection, ftp_dir, statusfilename, statusfilename) :
-                logging.info("putfile successful")
+                logging.info("putfile of %s successful" % statusfilename)
             else:
-                logging.info("putfile error")
+                logging.info("putfile of %s error" % statusfilename)
             quit_server(server_connection)    
         
     return    
+        
+def log_yesterday():
+
+    hostname=socket.gethostname()
+
+    yesterday = datetime.date.today() - datetime.timedelta(1)
+    datestring= yesterday.strftime("%Y-%m-%d")
+
+    logfilepath = make_logfile_basename()+"." + datestring
+
+   
+    if use_http_post == True:
+    
+        http_post(logfilepath, hostname, status=True)
+        
+    else :
+        ftp_dir = localsettings.ftp_destination + "/status/" + hostname
+        
+        server_connection = connect_to_server()
+        ftp_dir = localsettings.ftp_destination + "/status/"
+        change_create_server_dir(server_connection, ftp_dir)
+        ftp_dir += hostname
+
+        logfilename = os.path.basename(logfilepath)
+        
+        if server_connection != None:
+            if putfile(server_connection, ftp_dir, logfilepath, logfilename) :
+                logging.info("putfile of %s successful" % logfilename)
+            else:
+                logging.info("putfile of %s error" % logfilename)
+            quit_server(server_connection)      
+    
+    return
         
         
 def main(argv=None):
     set_up_logging()
 
     try:
-      options, args = getopt.getopt(argv, "hs",["status", "help"])
+      options, args = getopt.getopt(argv, "hsl",["status", "help", "log"])
     except getopt.GetoptError:
         help()
         sys.exit(2)
@@ -881,8 +935,11 @@ def main(argv=None):
         if option in ("-h", "--help"):
             help()
             sys.exit()
-        if option in ("-s", "--status"):
+        elif option in ("-s", "--status"):
             status()
+            sys.exit()
+        elif option in ("-l", "--log"):
+            log_yesterday()
             sys.exit()
         else:
             logging.error("unhandled option")
