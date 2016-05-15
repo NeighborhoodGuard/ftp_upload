@@ -824,11 +824,13 @@ def get_day_image_count() :
         daycount=len(os.listdir(localsettings.incoming_location))
         imagecount=sum([len(files) for r, d, files in os.walk(localsettings.incoming_location)])
     else:
-        p = subprocess.Popen("""find $BASELOCATION/images.incoming/. -type f -name '*.jpg' | wc -l""", shell = True, stdout=subprocess.PIPE)
+        cmdstring = """find {incoming_location}/. -type f -name '*.jpg' | wc -l""".format(incoming_location=localsettings.incoming_location)
+        p = subprocess.Popen(cmdstring, shell = True, stdout=subprocess.PIPE)
         p.wait()
         daycount = string.strip(p.stdout.read())
         
-        p = subprocess.Popen("""ls -1 $BASELOCATION/images.incoming | wc -l""", shell = True, stdout=subprocess.PIPE)
+        cmdstring = """ls -1 {incoming_location} | wc -l""".format(incoming_location=localsettings.incoming_location)
+        p = subprocess.Popen(cmdstring, shell = True, stdout=subprocess.PIPE)
         p.wait()
         imagecount = string.strip(p.stdout.read())
         
