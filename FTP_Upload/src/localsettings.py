@@ -1,7 +1,8 @@
 ################################################################################
 #
-# Copyright (C) 2013 Neighborhood Guard, Inc.  All rights reserved.
-# Original author: Jesper Jercenoks
+# Copyright (C) 2013-2014 Neighborhood Guard, Inc.  All rights reserved.
+# Original author: Jesper Jurcenoks
+# Maintained by the Neighborhood Guard development team
 # 
 # This file is part of FTP_Upload.
 # 
@@ -24,27 +25,49 @@ import logging
 
 ##################################################################################
 #                                                                                #
-#   "incoming_location" is the location of the uploaded images from the camera  #
+#   "base_location" is the folder where images are stored (end with a slash)     #
+#   "incoming_location" is the location of the uploaded images from the camera   #
 #   "processed_location" is where uploaded images are stored                     #
 #   "ftp_server" is the name of the ftp_server                                   #
 #   "ftp_username" is the username to the ftp server                             #
 #   "ftp_password" is the password to the ftp server                             #
-#   "ftp_destinationn" is the directory on the ftp server for the images         #
+#   "ftp_destination" is the directory on the ftp server for the images          #
 #   ftp_destination must exist (safety check)                                    #
 #                                                                                #
 ##################################################################################
 
-incoming_location = "your_incoming_directory"
-processed_location = "your_processed_directory" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
+ftp_server = "ftp.ng_demo.org"    # Always change this
+ftp_username = "ng_demo_user"     # and this 
+ftp_password = "ng_demo_password" # and this
+
+ftp_destination = "/communityview.yourneighborhood.org" # you must change this
+# remember to start with /
+# this is the relative path from your home directory
+
+# specific locations are created below this directory
+base_location = "/home/pi/"  # Default for Images on SD Card
+#base_location = "/mnt/ngdata/" # Default for Images on Harddisk
+
+incoming_location = base_location + "images.incoming"  # the sample values are the defaults for RaspGuard
+processed_location = base_location + "images.uploaded" # Make sure this directory is NOT below the incoming_location as you will be creating an endlees upload loop
+
+sleep_err_seconds = 600  #Time to sleep when error (Default = 600)
+sleep_upload = 60		 #Time to sleep for new pictures (Default = 60)   (Useful to change during testing)
+
+delete=True # must be True for Purge to work
 	
-ftp_server = "your_ftp_server_name"
-ftp_username = "your_user_name"
-ftp_password = "your_password"
-ftp_destination = "/your_destination_dir" # remember to start with /
-delete=True # Change to True for Purge to work
-	
-	
-retain_days = 6 # number of days to retain local images. (not on the FTP server)
+use_sftp = False
+
+if use_sftp==True:
+  ftp_destination = "/home/" + ftp_username + ftp_destination
+
+use_http_post = False # True is recommended but requires that communityview_upload_image.py is installed on the server
+http_username =  "web_user" #notice this is the username and password of the web-user e.g. the same as people viewing the video
+http_password = "web_users_password" # and thus NOT the password used by ftp or sftp to upload images.
+http_post_url = "http://communityview.yourneighborhood.org/communityview/communityview_upload_image.py"
+
+  
+retain_days = 2 # number of days to retain local images (on the Raspberry Pi). (Data retention on the destination Cloud server is set somewhere else)
 
 # Logger settings
 #
@@ -57,4 +80,8 @@ logfile_log_level = logging.INFO
 
 # max number of previous log files to save, one log file per day
 logfile_max_days = 10
+
+# thread settings
+max_threads = 2 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
+reserved_priority_threads = 1 # previousdays can only upload multithreaded when running today threads fall below this number.
 

@@ -21,24 +21,35 @@
 ################################################################################
 
 
-# top-level directory on the testing machine under which the directories for the
+# Top-level directory on the testing machine under which the directories for the
 # incoming and processed files, and the simulated cloud server FTP directory
-# will be located.  The testing code tacitly assumes all three of these
-# directories will be under the same parent directory on the test machine. Also,
-# there are a lot of Windows-specific assumptions in the testing code.  Work
-# needs to be done to untangle this, and make the code portable to non-Windows
-# testing systems
+# will be located.  The testing code expects all three of these
+# directories to be under the same parent directory on the test machine.
+# As a safety measure, this directory must exists in order for the tests to run.
 #
-ftp_testing_root = "test_system_ftp_root_directory" 
+# This variable is the only variable that definitely needs to be
+# configured for your test setup. The value shown is just an example. 
+#
+ftp_testing_root = "C:/fup_testing"
 
-# Set up the testing values for the ftp_upload global vars
+#
+# The remaining variables below can be left as is.
+#
+
+# The information needed to access the local FTP server on the testing machine.
+# These values may be left as is or changed, but an account must exist with the
+# configured user name and password on the test FTP server.
+#
+ftp_server = "localhost"
+ftp_username = "ng"
+ftp_password = "ng"
+
+
+# The sub-directories of ftp_testing_root.  These are created automatically
+# by the test code.
 #
 sep = "/"
-incoming_location = ftp_testing_root + sep + "test_system_incoming_directory"
-processed_location = ftp_testing_root + sep + "test_system_processed_directory" 
+incoming_location = ftp_testing_root + sep + "incoming"
+processed_location = ftp_testing_root + sep + "processed" 
+ftp_destination = sep + "destination"
     
-ftp_server = "test_ftp_server_hostname"
-ftp_username = "test_ftp_server_username"
-ftp_password = "test_ftp_server_password"
-ftp_destination = sep + "test_ftp_server_destination_directory"
-
