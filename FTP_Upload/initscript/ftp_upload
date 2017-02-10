@@ -1,0 +1,86 @@
+#!/bin/bash
+################################################################################
+#
+# Copyright (C) 2018 Neighborhood Guard, Inc.  All rights reserved.
+# Original author: Douglas Kerr
+# 
+# This file is part of FTP_Upload.
+# 
+# FTP_Upload is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# FTP_Upload is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# 
+# You should have received a copy of the GNU Affero General Public License
+# along with FTP_Upload.  If not, see <http://www.gnu.org/licenses/>.
+#
+################################################################################
+### BEGIN INIT INFO
+# Provides:          ftp_upload
+# Required-Start:    $remote_fs $network $named $time
+# Required-Stop:     $remote_fs $network $named $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: ftp_upload
+# Description:       Upload camera image files to cloud server.
+### END INIT INFO
+
+DAEMON=python
+DAEMONOPTS="/opt/ftp_upload/ftp_upload.py"
+LOG_PATH="/var/opt/ftp_upload/log"
+
+NAME=ftp_upload
+PIDFILE=/var/run/$NAME.pid
+
+case "$1" in
+start)
+	printf "%-50s" "Starting $NAME..."
+	cd $LOG_PATH    # lame: ftp_upload log is written in current dir
+	PID=`$DAEMON $DAEMONOPTS > /dev/null 2>&1 & echo $!`
+	#echo "Saving PID" $PID " to " $PIDFILE
+        if [ -z $PID ]; then
+            printf "%s\n" "Fail"
+        else
+            echo $PID > $PIDFILE
+            printf "%s\n" "Ok"
+        fi
+;;
+status)
+        printf "%-50s" "Checking $NAME..."
+        if [ -f $PIDFILE ]; then
+            PID=`cat $PIDFILE`
+            if [ -z "`ps axf | grep ${PID} | grep -v grep`" ]; then
+                printf "%s\n" "Process dead but pidfile exists"
+            else
+                echo "Running"
+            fi
+        else
+            printf "%s\n" "Service not running"
+        fi
+;;
+stop)
+        printf "%-50s" "Stopping $NAME"
+        PID=`cat $PIDFILE`
+        if [ -f $PIDFILE ]; then
+            kill -HUP $PID
+            printf "%s\n" "Ok"
+            rm -f $PIDFILE
+        else
+            printf "%s\n" "pidfile not found"
+        fi
+;;
+
+restart|force-reload)
+  	$0 stop
+  	$0 start
+;;
+
+*)
+        echo "Usage: $0 {status|start|stop|restart|force-restart}"
+        exit 1
+esac
