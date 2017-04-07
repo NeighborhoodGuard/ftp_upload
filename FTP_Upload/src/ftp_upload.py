@@ -77,10 +77,11 @@ def change_create_ftp_dir(ftp_connection, dirname):
                 ftp_connection.mkd(dirname)
                 ftp_connection.cwd(dirname)     
             except Exception, e:
-                logging.warning("can't make ftp directory %s" % dirname)
+                logging.warning("can't make/change to ftp directory %s" % dirname)
                 logging.exception(e)
+                return False
         
-    return
+    return True
 
 def dir2date(indir):
     #extract date from indir style z:\\ftp\\12-01-2
@@ -156,7 +157,16 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
         
     ftp_connection = connect_to_ftp()
     if ftp_connection != None:
-        change_create_ftp_dir(ftp_connection, ftp_dir)
+        if not change_create_ftp_dir(ftp_connection, ftp_dir):
+            # if we can't create or change to the ftp_dir for some reason
+            # (probably transient), abort storing the file, and let it be
+            # picked up by the main loop next time around
+            logging.warn("storefile: aborting; couldn't change to %s" % ftp_dir)
+            quit_ftp(ftp_connection)
+            if today:
+                current_priority_threads -= 1
+            return
+            
         logging.info("Uploading %s", filepath)
         try:
             filehandle = open(filepath, "rb")
@@ -210,8 +220,14 @@ def storedir(dirpath, ftp_dir, done_dir, today):
     logging.info("done_dir = %s", done_dir)
 
     ftp_connection = connect_to_ftp()
-    change_create_ftp_dir(ftp_connection, ftp_dir)
+    dir_ok = change_create_ftp_dir(ftp_connection, ftp_dir)
     quit_ftp(ftp_connection)
+    if not dir_ok:
+        # if we can't create or change to the ftp_dir for some reason
+        # (probably transient), abort storing the dir, and let it be
+        # picked up by the main loop next time around
+        logging.warn("storedir: aborting; couldn't change to %s" % ftp_dir)
+        return
     
     mkdir(done_dir)
     
