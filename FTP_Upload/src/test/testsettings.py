@@ -20,25 +20,47 @@
 #
 ################################################################################
 
+sep = "/"
+
+# the relative path from the ftp_testing_root to the testing destination directory.
+# This points to the same directory as ftp_destination below
+#
+ftp_testing_dest = "cloud"
+
+#
+##### Configuration Section 
+#
+# Generally, the variables above and below this section won't need to be
+# changed.
+#
 
 # top-level directory on the testing machine under which the directories for the
 # incoming and processed files, and the simulated cloud server FTP directory
 # will be located.  The testing code tacitly assumes all three of these
-# directories will be under the same parent directory on the test machine. Also,
-# there are a lot of Windows-specific assumptions in the testing code.  Work
-# needs to be done to untangle this, and make the code portable to non-Windows
-# testing systems
+# directories will be under the same parent directory on the test machine.
 #
-ftp_testing_root = "C:/fup_testing" 
+ftp_testing_root = "/home/testuser/ftp_upload_test"
+
+ftp_username = "testuser"
+ftp_password = "testpasswd"
+
+# this is the path of the FTP destination directory (the root of the tree into
+# which files will be written on the cloud server) relative to the FTP login
+# directory
+#
+ftp_destination = sep + "ftp_upload_test" + sep + ftp_testing_dest
+
+#
+##### End of Configuration Section 
+#
+# Generally, the variables above and below this section won't need to be
+# changed.
+#
 
 # Set up the testing values for the ftp_upload global vars
 #
-sep = "/"
 incoming_location = ftp_testing_root + sep + "incoming"
 processed_location = ftp_testing_root + sep + "processed" 
     
 ftp_server = "localhost"
-ftp_username = "ng"
-ftp_password = "ng"
-ftp_destination = sep + "destination"
 

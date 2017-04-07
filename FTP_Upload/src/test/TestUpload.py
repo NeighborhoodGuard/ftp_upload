@@ -29,11 +29,11 @@ import time
 import threading
 import ftplib
 import subprocess
-import re
 import logging
 import random
 import testsettings
 import sys
+import platform
 
 class ForceDate(datetime.date):
     """Force datetime.date.today() to return a specifiable date for testing
@@ -173,6 +173,7 @@ class MockFTP(ftplib.FTP):
         
 
 ftp_testing_root = testsettings.ftp_testing_root
+ftp_testing_dest = testsettings.ftp_testing_dest
 
 moduleUnderTest = ftp_upload
 
@@ -188,11 +189,7 @@ def deleteTestImages():
     shutil.rmtree(moduleUnderTest.processed_location, True, None)
     os.mkdir(moduleUnderTest.processed_location)
     
-    if moduleUnderTest.ftp_destination[0] == "/":
-        dest = moduleUnderTest.ftp_destination[1:]
-    else:
-        dest = moduleUnderTest.ftp_destination
-    cloudTestDir = os.path.join(ftp_testing_root, dest)
+    cloudTestDir = os.path.join(ftp_testing_root, ftp_testing_dest)
     shutil.rmtree(cloudTestDir, True, None)
     os.mkdir(cloudTestDir)
 #     print "ftp_testing_root =", ftp_testing_root
@@ -284,25 +281,28 @@ class Test(unittest.TestCase):
         # Strip out the link count as well, as it seems to be broken sometimes
         ls_sed = "ls -lR | sed -e \"s/[A-Z][a-z][a-z] [0-9 ][0-9] \\{1,2\\}[0-9][0-9]:\\{0,1\\}[0-9][0-9] //\" -e \"s/\\(^..........\\) \\+[0-9]\\+/\\1/\""
         
+        inc = ftp_upload.incoming_location
+        troot= ftp_testing_root
+        
         # capture the initial state of the incoming files tree (empty)
-        incoming = re.sub("/", "\\\\", ftp_upload.incoming_location)
-        exitStatus = subprocess.call("cd " + incoming + " & "+ls_sed+" > ..\\orig.ls", shell=True)
+        out = open( troot + "/orig.ls", "w")
+        exitStatus = subprocess.call(ls_sed, cwd=inc, stdout=out, shell=True)
         assert exitStatus == 0  # captured initial empty incoming file tree
 
         # Build the incoming directories and files to simulate the cameras
         # dropping files into the ftp_upload machine
         #
         if genFiles:
-            buildImages(ftp_upload.incoming_location, "2013-07-01", "downhill", "12-00-00", 1, 10)
-            buildImages(ftp_upload.incoming_location, "2013-07-01", "uphill", "12-00-02", 1, 10)
-            buildImages(ftp_upload.incoming_location, "2013-06-30", "downhill", "11-00-00", 1, 10)
-            buildImages(ftp_upload.incoming_location, "2013-06-30", "uphill", "11-00-02", 1, 10)
-            buildImages(ftp_upload.incoming_location, "2013-06-29", "downhill", "10-00-00", 1, 10)
-            buildImages(ftp_upload.incoming_location, "2013-06-29", "uphill", "10-00-02", 1, 10)
+            buildImages(inc, "2013-07-01", "downhill", "12-00-00", 1, 10)
+            buildImages(inc, "2013-07-01", "uphill", "12-00-02", 1, 10)
+            buildImages(inc, "2013-06-30", "downhill", "11-00-00", 1, 10)
+            buildImages(inc, "2013-06-30", "uphill", "11-00-02", 1, 10)
+            buildImages(inc, "2013-06-29", "downhill", "10-00-00", 1, 10)
+            buildImages(inc, "2013-06-29", "uphill", "10-00-02", 1, 10)
 
         # capture the state of the incoming files tree after being populated
-        incoming = re.sub("/", "\\\\", ftp_upload.incoming_location)
-        exitStatus = subprocess.call("cd " + incoming + " & "+ls_sed+" > ..\\incoming.ls", shell=True)
+        out = open( troot + "/incoming.ls", "w")
+        exitStatus = subprocess.call(ls_sed, cwd=inc, stdout=out, shell=True)
         assert exitStatus == 0  # captured incoming file tree before processing
            
         if today:
@@ -322,34 +322,40 @@ class Test(unittest.TestCase):
         SleepHook.removeCallback()
         
         # capture the state of the processed files tree
-        processed = re.sub("/", "\\\\", ftp_upload.processed_location)
-        exitStatus = subprocess.call("cd " + processed + " & "+ls_sed+" > ..\\processed.ls", shell=True)
+        out = open( troot + "/processed.ls", "w")
+        exitStatus = subprocess.call(ls_sed, cwd=ftp_upload.processed_location, 
+                                     stdout=out, shell=True)
         assert exitStatus == 0  # captured processed file tree after processing
         
         # capture the state of the cloud server files tree
-        cloud = re.sub("/", "\\\\", ftp_testing_root + ftp_upload.ftp_destination)
-        exitStatus = subprocess.call("cd " + cloud + " & "+ls_sed+" > ..\\cloud.ls", shell=True)
+        out = open( troot + "/cloud.ls", "w")
+        exitStatus = subprocess.call(ls_sed, cwd=os.path.join(ftp_testing_root, 
+                                                              ftp_testing_dest),
+                                     stdout=out, shell=True)
         assert exitStatus == 0  # captured server file tree after FTPing files
         
         # capture the final state of the incoming files tree
-        incoming = re.sub("/", "\\\\", ftp_upload.incoming_location)
-        exitStatus = subprocess.call("cd " + incoming + " & ls -lR > ..\\final.ls", shell=True)
+        out = open( troot + "/final.ls", "w")
+        exitStatus = subprocess.call(ls_sed, cwd=inc, stdout=out, shell=True)
         assert exitStatus == 0  # captured incoming file tree after processing
               
         # compare populated input tree before processing to processed tree
-        testRoot = re.sub("/", "\\\\", ftp_testing_root)
-        exitStatus = subprocess.call("cd " + testRoot + " & diff incoming.ls processed.ls > processed.diff", shell=True)
+        out = open( troot + "/processed.diff", "w")
+        exitStatus = subprocess.call("diff incoming.ls processed.ls", 
+                                     cwd=troot, stdout=out, shell=True)
         assert exitStatus == 0  # processed file tree == populated incoming tree
        
         # compare populated input tree to the cloud server tree
-        testRoot = re.sub("/", "\\\\", ftp_testing_root)
-        exitStatus = subprocess.call("cd " + testRoot + " & diff incoming.ls cloud.ls > cloud.diff", shell=True)
+        out = open( troot + "/cloud.diff", "w")
+        exitStatus = subprocess.call("diff incoming.ls cloud.ls", 
+                                     cwd=troot, stdout=out, shell=True)
         assert exitStatus == 0  # cloud server tree == populated incoming tree
        
         # compare the initial state of the incoming tree with the final state;
         # they should be identical and empty
-        testRoot = re.sub("/", "\\\\", ftp_testing_root)
-        exitStatus = subprocess.call("cd " + testRoot + " & diff orig.ls final.ls > final.diff", shell=True)
+        out = open( troot + "/final.diff", "w")
+        exitStatus = subprocess.call("diff orig.ls final.ls", 
+                                     cwd=troot, stdout=out, shell=True)
         assert exitStatus == 0  # final incoming tree == initial empty tree
          
 
@@ -362,11 +368,13 @@ class Test(unittest.TestCase):
         filepath = os.path.join(ftp_upload.incoming_location, date, loc, filename)
         donepath = os.path.join(ftp_upload.processed_location, date, loc, filename)
    
+        ftp_date_dir = os.path.join(ftp_testing_root, ftp_testing_dest, date)
+        os.mkdir(ftp_date_dir)
         buildImages(ftp_upload.incoming_location, date, loc, "21-22-00", 999, 1)
         ftp_upload.storefile(ftp_dir=ftp_dir, filepath=filepath, donepath=donepath, 
                              filename=filename, today=False)
         assert os.path.exists(donepath)
-        assert os.path.exists(os.path.join(ftp_testing_root+ftp_dir, filename))
+        assert os.path.exists(os.path.join(ftp_date_dir, loc, filename))
         
         
     def sleepOneSecond(self,seconds):
