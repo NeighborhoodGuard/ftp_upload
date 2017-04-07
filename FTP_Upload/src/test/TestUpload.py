@@ -33,7 +33,6 @@ import logging
 import random
 import testsettings
 import sys
-import platform
 
 class ForceDate(datetime.date):
     """Force datetime.date.today() to return a specifiable date for testing
