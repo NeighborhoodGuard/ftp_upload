@@ -8,7 +8,7 @@ than anything else.  The tests are written using PyUnit, which is the
 standard test framework for Python, and is included in the Python
 distribution as the `unittest` library module.
 
-The test code expects an FTP server to be running on the test
+The test code expects a local FTP server to be running on the test
 machine so that FTP_Upload can upload files via FTP as it would
 during normal operation, and the uploaded files along with their 
 directory structure can be verified for correctness by the test code.
@@ -21,12 +21,17 @@ images are placed with appropriate pathnames, i.e., in the form
 >*incoming_directory*/*date*/*location*/*image_name*.jpg
 > 
 
+In production, this directory would be where the camera(s) would
+deliver the *date*/*location*/*image_name*.jpg files so that they
+can be uploaded with the cloud server.
+
 The tests also set up a "processed" directory into which 
 FTP_Upload will place the images (with the same pathname
-structure) once the images have been uploaded to the FTP server.
+structure) once the images have been uploaded to the local test
+FTP ("cloud") server.
 
 Finally, the test code sets up a directory to be the destination
-directory that the FTP server will use as the root of the file
+directory that the local test FTP server will use as the root of the file
 tree created by the process of FTP_Upload uploading the test
 image files.
 
@@ -52,19 +57,35 @@ machine.
 
 The `ftp_username` and `ftp_password` can be left as they are or
 changed, as long as a corresponding user name and password are set
-up on the local FTP server.
+up on the local FTP server.  Under Linux, it is probably easiest to
+set the user name and password to that of the user running the tests,
+and set up the `ftp_testing_root` to point to somewhere under that
+user's home directory.
+
+The `ftp_destination` variable is the path from the test user's
+FTP login directory to the the FTP destination directory (the root 
+of the tree into which files will be written on the cloud server/local
+test FTP server).  Even though this is a relative path, it needs to
+start with "/".  This is a known bug.
 
 ### Local FTP Server ###
 
 As mentioned above, there must be an FTP server set up on the test
 machine so that FTP_Upload can actually transfer files using FTP.
+
 For a Windows test machine, we recommend using FileZilla Server
 for ease of installation and configuration, though
 any FTP server should work.
 
+For a Linux test machine, we recommend ProFTPd, due to the fact that
+it will accept a local relative directory name that begins with a "/".
+This is necessary due to the bug mentioned above relative to the
+`ftp_destination` variable.
+
 You will need to set up an account on the FTP server for the test code
 that has the same user name and password as have been configured in 
-`testsettings.py`.  Set the account's home directory to be the same as
+`testsettings.py`.  XXX
+Set the account's home directory to be the same as
 the `ftp_testing_root` you configured in `testsettings.py`, and give
 the account all permissions on that directory, e.g., read, write,
 create files and directories, delete files and directories, etc.
