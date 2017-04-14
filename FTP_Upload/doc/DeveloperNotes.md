@@ -5,7 +5,7 @@
 The FTP_Upload "unit tests" were written long after application 
 code was developed, and are more along the lines of system tests 
 than anything else.  The tests are written using PyUnit, which is the
-standard test framework for Python, and is included in the Python
+standard testing framework for Python, and is included in the Python
 distribution as the `unittest` library module.
 
 The test code expects a local FTP server to be running on the test
@@ -21,9 +21,9 @@ images are placed with appropriate pathnames, i.e., in the form
 >*incoming_directory*/*date*/*location*/*image_name*.jpg
 > 
 
-In production, this directory would be where the camera(s) would
+In production, this directory would be where the local camera(s) would
 deliver the *date*/*location*/*image_name*.jpg files so that they
-can be uploaded with the cloud server.
+can be uploaded to the cloud server.
 
 The tests also set up a "processed" directory into which 
 FTP_Upload will place the images (with the same pathname
@@ -62,13 +62,13 @@ set the user name and password to that of the user running the tests,
 and set up the `ftp_testing_root` to point to somewhere under that
 user's home directory.
 
-The `ftp_destination` variable is the path from the test user's
+The `ftp_destination` variable is the path from the test
 FTP login directory to the the FTP destination directory (the root 
 of the tree into which files will be written on the cloud server/local
 test FTP server).  Even though this is a relative path, it needs to
-start with "/".  This is a known bug.
+start with "/".  This is a known bug/feature.
 
-### Local FTP Server ###
+#### Local FTP Server ####
 
 As mentioned above, there must be an FTP server set up on the test
 machine so that FTP_Upload can actually transfer files using FTP.
@@ -82,19 +82,22 @@ it will accept a local relative directory name that begins with a "/".
 This is necessary due to the bug mentioned above relative to the
 `ftp_destination` variable.
 
-You will need to set up an account on the FTP server for the test code
+You will need to have an account set up on the local FTP server for the test code
 that has the same user name and password as have been configured in 
-`testsettings.py`.  XXX
-Set the account's home directory to be the same as
-the `ftp_testing_root` you configured in `testsettings.py`, and give
-the account all permissions on that directory, e.g., read, write,
-create files and directories, delete files and directories, etc.
+`testsettings.py`. 
+Both the account under which the tests are being run, and the testing account
+on the local test FTP server must have all permissions on the `ftp_testing_root`
+directory.  That is, both accounts must be able to read, write,
+create files and directories, and delete files and directories.
+As mentioned above, it's probably easiest to configure the test setup
+such that the same account is used to both run the tests, and to log
+into the FTP server.
 
-### Unix/Linux Utilities ###
+#### Unix/Linux Utilities ####
 
-The test code uses a couple of Unix/Linux utilities, `ls` and `sed`, 
+The test code uses three Unix/Linux utilities, `ls`, `sed` and `diff`, 
 to help analyze the results produced by testing FTP_Upload.
-Therefore, these two commands must be available in the execution path 
+Therefore, these three commands must be available in the execution path 
 (`PATH` variable) of the test process.  If the tests are being run
 under Windows, these are not part of the standard command set.
 
@@ -102,23 +105,26 @@ When running under Windows, the simplest way to
 get these commands into the execution path is
 to install Git (which you probably already installed in order to 
 download the FTP_Upload repository), and then to run the tests from the
-`Git Bash` command line.  `Git Bash` includes a very complete set of
-Unix/Linux utilities in its execution path, including `ls` and `sed`.
+`Git Bash` command line. `Git Bash` includes a very complete set of
+Unix/Linux utilities in its execution path, including these three.
 You can also run the tests
 from the Windows command line by adding the appropriate path to your
 execution path, e.g., `C:\Program Files\Git\bin`.
 
-Lastly, Windows versions of `ls` and `sed` utilities can also be found in the 
+Lastly, Windows versions of the `ls`, `sed` and `diff` utilities can also be 
+found in the 
 [UnxUtils package available from SourceForge](unxutils.sourceforge.net).
 
-### PYTHONPATH Environment Variable ###
+#### PYTHONPATH Environment Variable ####
 
-The tests are located in the directory `FTP_Upload/src/test` 
+The tests are located in the `FTP_Upload/src/test` directory,
 while the FTP_Upload
 code that is being tested is located in the `FTP_Upload/src` directory.
-In order for the test code to find the FTP_Upload code, you must set
+If you are not using the Eclipse IDE, in order for the test code to find the 
+FTP_Upload code, you must set
 the `PYTHONPATH` environment variable to include the path to the 
-FTP_Upload code.  For example, if you make `FTP_Upload/src/test` 
+FTP_Upload code.
+For example, if you make `FTP_Upload/src/test` 
 your current
 directory before executing the tests, 
 you could simply say in `Git Bash`,
@@ -128,6 +134,8 @@ you could simply say in `Git Bash`,
 or on the Windows command line,
 
 	set PYTHONPATH ..
+	
+If you are using Eclipse, it will set the `PYTHONPATH` variable for you.
 
 ### Running the Tests ###
 
@@ -135,6 +143,9 @@ The easiest way to run the tests is to `cd` to the `FTP_Upload/src/test` directo
 give the command,
 
 	python TestUpload.py
+	
+If you are using Eclipse, just select TestUpload.py either in the source 
+window or the Package Explorer and click the Run button.
 
 The test produces a lot of output, because FTP_Upload sends all of its
 logging output to the console as well as to the log file.  (The log
