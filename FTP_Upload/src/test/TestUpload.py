@@ -275,10 +275,17 @@ class Test(unittest.TestCase):
         
     def uploadAndValidate(self, today, genFiles):
         
-        # shell command to do recursive ls then use sed to strip out the timestamp
-        # (this includes both the "MMM DD HH:MM" form and the "MMM DD  YYYY" form).
-        # Strip out the link count as well, as it seems to be broken sometimes
-        ls_sed = "ls -lR | sed -e \"s/[A-Z][a-z][a-z] [0-9 ][0-9] \\{1,2\\}[0-9][0-9]:\\{0,1\\}[0-9][0-9] //\" -e \"s/\\(^..........\\) \\+[0-9]\\+/\\1/\""
+        # shell command to do recursive ls then use sed to strip out everything
+        # except the size and filename
+        ls_sed = ("ls -lR | sed "
+                  # remove timestamp (this includes both the "MMM DD HH:MM"
+                  # form and the "MMM DD  YYYY" form)
+                  "-e \"s/[A-Z][a-z][a-z] [0-9 ][0-9] \\{1,2\\}"
+                  "[0-9][0-9]:\\{0,1\\}[0-9][0-9] //\" "
+                  # remove permissions, link count, owner, group
+                  "-e \"s/^.\\{10\\} \\+[0-9]\\+ \\+[a-zA-Z0-9_-]\\+ \\+"
+                  "[a-zA-Z0-9_-]\\+ \\+//\""
+                 )
         
         inc = ftp_upload.incoming_location
         troot= ftp_testing_root
