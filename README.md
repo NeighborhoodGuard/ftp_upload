@@ -1,6 +1,6 @@
-#FTP_Upload#
+# FTP_Upload #
 
-###Summary###
+### Summary ###
 
 FTP_Upload is part of a software suite from [Neighborhood Guard](http://neighborhoodguard.org) to upload images from IP cameras and organize them into Web pages for easy access and review.
 
@@ -8,10 +8,10 @@ FTP_Upload is an application written in Python intended run on a machine local t
 
 The FTP_Upload software takes care of transferring these image files to the server via FTP, then deleting them from the local machine once they have been successfully transferred and an expiration period has elapsed.
 
-###Installation and Configuration###
+### Installation and Configuration ###
 [To be supplied]
 
-###License###
+### License ###
 
 FTP_Upload is open-source software available under the terms of the Affero GPL 3.0 license.  If the Affero GPL license does not meet your needs, other licensing arrangements are available from Neighborhood Guard, Inc.
 
