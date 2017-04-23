@@ -44,7 +44,7 @@ import signal
 
 from localsettings import *
 
-version_string = "1.5.5master-prep"
+version_string = "1.5.5"
 
     
 max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
