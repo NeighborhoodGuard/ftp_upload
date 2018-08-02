@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Copyright (C) 2013 Neighborhood Guard, Inc.  All rights reserved.
+# Copyright (C) 2013-2018 Neighborhood Guard, Inc.  All rights reserved.
 # Original author: Douglas Kerr
 # 
 # This file is part of FTP_Upload.
@@ -31,8 +31,10 @@ import ftplib
 import subprocess
 import logging
 import random
-import testsettings
 import sys
+import StringIO
+import ConfigParser
+
 
 class ForceDate(datetime.date):
     """Force datetime.date.today() to return a specifiable date for testing
@@ -170,31 +172,6 @@ class MockFTP(ftplib.FTP):
             else:
                 MockFTP.origFTP.storbinary(self, command, filehandle)
         
-
-ftp_testing_root = testsettings.ftp_testing_root
-ftp_testing_dest = testsettings.ftp_testing_dest
-
-moduleUnderTest = ftp_upload
-
-def deleteTestImages():
-    """Set up the directories on the local machine under ftp_testing_root
-    to represent the dirs on the ftp_upload machine and the Cloud server
-    """
-    moduleUnderTest = ftp_upload
-    
-    shutil.rmtree(moduleUnderTest.incoming_location, True, None)
-    os.mkdir(moduleUnderTest.incoming_location)
-    
-    shutil.rmtree(moduleUnderTest.processed_location, True, None)
-    os.mkdir(moduleUnderTest.processed_location)
-    
-    cloudTestDir = os.path.join(ftp_testing_root, ftp_testing_dest)
-    shutil.rmtree(cloudTestDir, True, None)
-    os.mkdir(cloudTestDir)
-#     print "ftp_testing_root =", ftp_testing_root
-#     print "cloudTestDir =", cloudTestDir
-
-
 def buildImages(rootPath, day, location, time, startingSeq, count):
     """Build the incoming directories and files to simulate the cameras
     dropping files into the ftp_upload machine
@@ -208,7 +185,7 @@ def buildImages(rootPath, day, location, time, startingSeq, count):
     :param count: The number of images files to generate.
     """
 
-    datepath = os.path.join(moduleUnderTest.incoming_location, day)
+    datepath = os.path.join(rootPath, day)
     if not os.path.exists(datepath):
         os.mkdir(datepath)
     
@@ -223,38 +200,67 @@ def buildImages(rootPath, day, location, time, startingSeq, count):
 
 class Test(unittest.TestCase):
     
+    module_under_test = ftp_upload
     origThreadList = None
 
     def setUp(self):
-
-        module = ftp_upload
         
+        mod = self.module_under_test
+        
+        test_conf = "test.conf"
+        
+        # get the values from the config file
+        #
+        sect = "forcedsection"
+        conf_str = "[" + sect + "]\n"  + open(test_conf, 'r').read()
+        conf_fp = StringIO.StringIO(conf_str)
+        config = ConfigParser.SafeConfigParser()
+        config.readfp(conf_fp)
+        
+        # set up instance vars
+        #
+        self.ftp_testing_root = config.get(sect, "ftp_testing_root")
+        ftp_testing_dest = config.get(sect, "ftp_testing_dest")
+        # full path of FTP destination directory
+        self.ftp_destination_path = os.path.join(self.ftp_testing_root, 
+                                                 ftp_testing_dest)
+
         # set up test for log file renaming
         bn = "ftp_upload"
         ext = ".log"
         if not os.path.exists(bn+ext):
             open(bn+ext, "w").close
-
-        module.set_up_logging()
-        
+            
         # Set up the testing values for the ftp_upload global vars
         #
-        module.incoming_location = testsettings.incoming_location
-        module.processed_location = testsettings.processed_location          
-        module.ftp_server = testsettings.ftp_server
-        module.ftp_username = testsettings.ftp_username
-        module.ftp_password = testsettings.ftp_password
-        module.ftp_destination = testsettings.ftp_destination # remember to start with /
+        assert mod.get_config(test_conf) == True
         
-       
+        mod.set_up_logging()
+        
         # hook the date() method
         datetime.date = ForceDate
         
         # set up clean test directories
-        deleteTestImages()
+        self.deleteTestImages()
         
         self.origThreadList = threading.enumerate()
         list(self.origThreadList)
+
+    def deleteTestImages(self):
+        """Set up the directories on the local machine under ftp_testing_root
+        to represent the dirs on the ftp_upload machine and the Cloud server
+        """
+        mod = self.module_under_test
+        
+        shutil.rmtree(mod.cfg.incoming_location, True, None)
+        os.mkdir(mod.cfg.incoming_location)
+        
+        shutil.rmtree(mod.cfg.processed_location, True, None)
+        os.mkdir(mod.cfg.processed_location)
+        
+        shutil.rmtree(self.ftp_destination_path, True, None)
+        os.mkdir(self.ftp_destination_path)
+
 
  
     def tearDown(self):
@@ -287,8 +293,8 @@ class Test(unittest.TestCase):
                   "[a-zA-Z0-9_-]\\+ \\+//\""
                  )
         
-        inc = ftp_upload.incoming_location
-        troot= ftp_testing_root
+        inc = ftp_upload.cfg.incoming_location
+        troot= self.ftp_testing_root
         
         # capture the initial state of the incoming files tree (empty)
         out = open( troot + "/orig.ls", "w")
@@ -329,14 +335,13 @@ class Test(unittest.TestCase):
         
         # capture the state of the processed files tree
         out = open( troot + "/processed.ls", "w")
-        exitStatus = subprocess.call(ls_sed, cwd=ftp_upload.processed_location, 
+        exitStatus = subprocess.call(ls_sed, cwd=ftp_upload.cfg.processed_location, 
                                      stdout=out, shell=True)
         assert exitStatus == 0  # captured processed file tree after processing
         
         # capture the state of the cloud server files tree
         out = open( troot + "/cloud.ls", "w")
-        exitStatus = subprocess.call(ls_sed, cwd=os.path.join(ftp_testing_root, 
-                                                              ftp_testing_dest),
+        exitStatus = subprocess.call(ls_sed, cwd=self.ftp_destination_path,
                                      stdout=out, shell=True)
         assert exitStatus == 0  # captured server file tree after FTPing files
         
@@ -370,13 +375,13 @@ class Test(unittest.TestCase):
         date = "2010-02-01"
         loc = "downhill"
         filename = "21-22-00-00999.jpg"
-        ftp_dir = ftp_upload.ftp_destination+"/"+date+"/"+loc
-        filepath = os.path.join(ftp_upload.incoming_location, date, loc, filename)
-        donepath = os.path.join(ftp_upload.processed_location, date, loc, filename)
+        ftp_dir = ftp_upload.cfg.ftp_destination+"/"+date+"/"+loc
+        filepath = os.path.join(ftp_upload.cfg.incoming_location, date, loc, filename)
+        donepath = os.path.join(ftp_upload.cfg.processed_location, date, loc, filename)
    
-        ftp_date_dir = os.path.join(ftp_testing_root, ftp_testing_dest, date)
+        ftp_date_dir = os.path.join(self.ftp_destination_path, date)
         os.mkdir(ftp_date_dir)
-        buildImages(ftp_upload.incoming_location, date, loc, "21-22-00", 999, 1)
+        buildImages(ftp_upload.cfg.incoming_location, date, loc, "21-22-00", 999, 1)
         ftp_upload.storefile(ftp_dir=ftp_dir, filepath=filepath, donepath=donepath, 
                              filename=filename, today=False)
         assert os.path.exists(donepath)
