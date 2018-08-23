@@ -6,6 +6,9 @@ systems.  We also added a remote access mechanism that works via SSH tunnels.
 Additionally, the tunnel daemon, `cktunnel` and `ftp_upload` program 
 are now run as Linux services.
 
+In release v2.1.0, we added the `findaxiscam` utility, along with its manual
+page, to find Axis IP cameras on the local network.
+
 ## Unit and System Tests ##
 ### Overview ###
 There are unit tests and system tests included for much of the code.  We use
@@ -48,9 +51,11 @@ This is not
 really a "remote" access test, but it does check the functionality of the tunnel
 system.
 
+The third and fourth tests check `findaxiscam` and its associated manual page.
+
 At the end of the test run, you should see the following:
 
-    Ran 2 tests.
+    Ran 4 tests.
     
     OK
 

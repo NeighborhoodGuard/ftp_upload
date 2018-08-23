@@ -1,0 +1,28 @@
+.TH FINDAXISCAM "1" "August 2018" "Neighborhood Guard: FTP_Upload" "User Commands"
+.SH NAME
+findaxiscam \- Find Axis IP cameras on the local network
+.SH SYNOPSIS
+.B findaxiscam
+.SH DESCRIPTION
+.PP
+Find Axis IP cameras on the local network and print a one-line summary for
+each camera found to the standard output. 
+.PP
+Each summary line consists of the IP address of the camera,
+its fully qualified host name
+and its advertised service name.
+findaxiscam uses \fBavahi-browse\fR to find the cameras via mDNS-SD.
+The second and third fields are as returned by \fBavahi-browse\fR.
+All three fields in the summary line are separated by spaces,
+and the service name field may contain spaces.
+.SH AUTHOR
+Written by Douglas Kerr.
+.SH COPYRIGHT
+Copyright \(co 2018 Neigborhood Guard, Inc.
+License AGPLv3+: GNU Affero GPL version 3 or later
+<https://www.gnu.org/licenses/agpl-3.0.en.html>.
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.SH "SEE ALSO"
+avahi-browse(1)

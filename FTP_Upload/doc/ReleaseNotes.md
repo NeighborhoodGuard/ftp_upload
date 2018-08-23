@@ -1,5 +1,20 @@
 # Release Notes for FTP_Upload
 
+## v2.1.0 - 2018/08/22
+_Doug Kerr_
+
+* Version 2.1.0 adds the `findaxiscam` utility and its associated manual page.
+`Findaxiscam` is a Linux command-line utility that finds Axis IP cameras on
+the local network in a manner similar to the
+Axis IP Utility.
+
+### Known Issues
+
+* Sometimes the tunnel test (`test_tunnel`) in `testSystem.sh` fails
+on the first attempt, even though the tunnel software is properly set up.
+* Need to add a graceful shutdown mechanism so that, for example, FTP connections are not terminated in mid-transfer.
+* The internal `current_priority_threads` counter appears to slowly increase, rather than reflecting the correct number of threads that are uploading the files for "today."  Increases are on the order of one bogus count for every 5,000 to 10,000 files transferred.  This is not a major problem, but has the effect of slowly eliminating the multi-threading for transferring the current day's images, resulting in reduced performance. Workaround: restart the program.
+
 ## v2.0.0 - 2018/07/28
 _Doug Kerr_
 
@@ -16,11 +31,6 @@ directly, and the `localsettings.py` file has been eliminated.
 * The `ftp_upload.py` code has not been materially changed in this release, 
 other than for the new .conf file configuration mechanism.  It has been tested
 on Windows as well as Linux.
-
-### Known Issues
-
-* Need to add a graceful shutdown mechanism so that, for example, FTP connections are not terminated in mid-transfer.
-* The internal `current_priority_threads` counter appears to slowly increase, rather than reflecting the correct number of threads that are uploading the files for "today."  Increases are on the order of one bogus count for every 5,000 to 10,000 files transferred.  This is not a major problem, but has the effect of slowly eliminating the multi-threading for transferring the current day's images, resulting in reduced performance. Workaround: restart the program.
 
 ## v1.5.5 - 2017/04/14
 _Doug Kerr_

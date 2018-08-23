@@ -2,7 +2,7 @@
 # Installing under Linux
 
 As of v2.0.0, FTP_Upload includes an automated installer for 
-Debian derivatives ofLinux.
+Debian derivatives of Linux.
 The installer uses a simple UI to ask the user some configuration questions,
 then installs and configures
 all the required system software plus the FTP_Upload software

@@ -147,4 +147,25 @@ test_tunnel() {
     rm "$tfile"
 }
 
+test_findaxiscam() {
+    # publish a test camera to find
+    sname=test-axis
+    avahi-publish -s $sname _axis-video._tcp 80 2> /dev/null &
+    avahi_pid=$!
+    sleep 2 # time for publishing to be effected
+
+    set -- `findaxiscam | sed /$sname/q`
+
+    # stop publishing test camera
+    kill $avahi_pid
+
+    assertEquals " Wrong mDNS host name" `hostname`.local $2
+    assertEquals " Wrong mDNS service name" $sname $3
+}
+
+test_man_page() {
+    assertTrue " findaxiscam manual page not found" \
+        "man findaxiscam > /dev/null"
+}
+    
 . `which shunit2`
