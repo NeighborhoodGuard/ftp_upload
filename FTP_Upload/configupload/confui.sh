@@ -140,6 +140,7 @@ get_info() {
         m="${m}configure the software required. "
         m="${m}This program does not use the mouse. "
         m="${m}Move the cursor by using the TAB key or the arrow keys. "
+        m="${m}Hit the Enter key when done with each entry."
         m="${m}\n\n"
         m="${m}NOTE: If you have not upgraded this machine in the last "
         m="${m}couple months (or ever), press ESC to cancel and run these two "
@@ -193,8 +194,11 @@ get_info() {
         ;;
     3)
         title="Camera's FTP User Name For This Machine"
-        m="${m}Enter the user name the camera will use when connecting to "
-        m="${m}this machine via FTP to upload images."
+        m="${m}Enter the user name of the account "
+        m="${m}the camera will use when connecting to "
+        m="${m}this machine via FTP to upload images.  "
+        m="${m}If this account does not yet exist on this machine, "
+        m="${m}it will be created."
         confvalbox "$title" "$m$esc" um_cam_user > /dev/null
         step=`expr $step + $?`
         ;;
@@ -227,7 +231,8 @@ get_info() {
         ;;
     6)
         title="Domain Name of the Cloud Server"
-        m="${m}Enter the domain name for the cloud server that this "
+        m="${m}Enter the domain name or the IP address of the cloud server "
+        m="${m}that this "
         m="${m}machine will upload images to, e.g., yourneighborhood.org."
         confvalbox "$title" "$m$esc" cs_name > /dev/null
         step=`expr $step + $?`
@@ -250,9 +255,10 @@ get_info() {
         title="Cloud Server FTP Directory"
         m="${m}Enter the name of the directory within the cloud server "
         m="${m}account into which this machine will upload images. This "
-        m="${m}is usually a domain name representing the domain portion "
+        m="${m}may be a domain name representing the domain portion "
         m="${m}of the URL where the images can be viewed, e.g., "
-        m="${m}images.yourneighborhood.org."
+        m="${m}images.yourneighborhood.org. "
+        m="${m}For AWS cloud servers, this is empty."
         confvalbox "$title" "$m$esc" cs_ftp_dir > /dev/null
         step=`expr $step + $?`
         ;;
