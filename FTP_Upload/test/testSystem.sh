@@ -35,7 +35,7 @@
 
 . ../configupload/utils.sh
 
-mainconf=../configupload/upload.conf
+mainconf=`find_config`
 
 test_ftp_upload() {
     local image=../src/test/SampleImage.jpg

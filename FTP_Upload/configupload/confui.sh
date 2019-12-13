@@ -25,8 +25,7 @@
 # configuration values for configupload
 
 # names of the config file and its associated temp file
-conf_file=upload.conf
-conf_temp=.upload.conf
+conf_temp=.uploader.conf
 
 # standard height and width for message boxes
 height=13
@@ -92,12 +91,17 @@ cancel_dialog() {
     fi
 }
 
-# create the temporary config file
+# create the temporary config file.
+# If there is an extant config file, use the data in it to populate
+# the temporary config file.
+#
+# usage: create_conftemp config_file
 #
 create_conftemp() {
-    if [ -r "$conf_file" ]
+    local cfile="$1"
+    if [ -r "$cfile" ]
     then
-        cp "$conf_file" "$conf_temp"
+        cp "$cfile" "$conf_temp"
         sed -i "/^#>>/d" "$conf_temp"    # remove old comment header
         sed -i '1{x;p;x;}' "$conf_temp"  # insert blank line at top of file
     else
@@ -115,9 +119,12 @@ create_conftemp() {
 # gather the required config info from the user by displaying a series
 # of dialog boxes. Return zero if successful or non-zero if user cancels
 #
+# usage: get_info config_file
+#
 get_info() {
+    local cfile="$1"
 
-    create_conftemp
+    create_conftemp "$cfile"
 
     local esc="\n\n                [Press ESC to cancel]"
     
@@ -270,7 +277,7 @@ get_info() {
             --yesno "$m$esc" $height $width
         case $? in
             0)  # Install button
-                mv "$conf_temp" "$conf_file"
+                mv "$conf_temp" "$cfile"
                 break
                 ;;
 
@@ -293,7 +300,7 @@ get_info() {
 
         if cancel_dialog $save_offer
         then
-            mv "$conf_temp" "$conf_file"
+            mv "$conf_temp" "$cfile"
         fi
         return 1
         ;;

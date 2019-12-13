@@ -28,7 +28,7 @@ UNIT_TEST_IN_PROGRESS=1
 . ../utils.sh
 
 setUp() {
-    rm -rf _ttf_*   # remove the temporary test files
+    rm -rf _ttf_* _testingroot uploader.conf # remove the temporary test files
 }
 
 # test the functions for setting values in config files
@@ -176,6 +176,40 @@ test_create_dir() {
         test -d $d
         assertTrue "directory $d exists" $?
     done
+}
+
+# test the function to find the configuration file
+#
+test_find_config() {
+    local d
+    local troot=_testingroot
+    TESTING_ROOT=$troot
+    local tdirs="/etc /etc/ftp_upload /etc/opt/ftp_upload"
+    local tfile=uploader.conf
+
+    # create the testing directories
+    for d in $tdirs
+    do
+        mkdir --parents "$troot$d"
+    done
+
+    # test no config file
+    local res=`find_config`
+    assertEquals "find_config: wrong no-file value retuned" \
+        /etc/opt/ftp_upload/$tfile "$res"
+
+    # test config file detection in each standard directory
+    for d in $tdirs
+    do
+        touch "$troot$d/uploader.conf"
+        res=`find_config`
+        assertEquals "find_config: wrong value returned" "$troot$d/$tfile" "$res"
+    done
+
+    # test config file detection in current directory
+    touch uploader.conf
+    res=`find_config`
+    assertEquals "find_config: wrong value returned" "./uploader.conf" "$res"
 }
 
 
