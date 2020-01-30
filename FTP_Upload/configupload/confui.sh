@@ -271,7 +271,7 @@ get_info() {
         ;;
     10)
         title="Ready to Install"
-        m="${m}Ready in install and configure this machine. "
+        m="${m}Ready to install and configure this machine. "
         m="${m}Select Install to proceed or Prev to go back."
         whiptail --title "$title" --yes-button Install --no-button "Prev" \
             --yesno "$m$esc" $height $width
