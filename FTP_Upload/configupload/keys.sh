@@ -106,7 +106,7 @@ setupkeypair () {
     #
     else
         echo "Generating new key pair."
-        echo | $SUDOLU ssh-keygen -q -t rsa -f $privkeyfile
+        echo | $SUDOLU ssh-keygen -q -N '' -t rsa -f $privkeyfile
     fi
 
     echo "Have key pair priv=$privkeyfile pub=$pubkeyfile"

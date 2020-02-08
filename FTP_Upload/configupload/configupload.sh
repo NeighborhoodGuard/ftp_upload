@@ -28,7 +28,7 @@
 # CommunityView software.
 
 # version of the configupload software
-version="2.1.0"
+version="2.2.0"
 
 . ./utils.sh
 . ./confui.sh
@@ -100,8 +100,12 @@ errorexit() {
     exit 1
 }
 
+# perform the actions to configure this machine to be an uploader
+#
+# usage: configure config_file
+#
 configure() {
-    local cfg=$conf_file
+    local cfg="$1"
     
     # Set up to catch unexpected errors and notify user
     #
@@ -314,10 +318,16 @@ main() {
     echo "\n`date --rfc-3339=seconds` Start configupload" >> "$scriptlog"
 
     
+    # get the name of the config file
+    local cfile=`find_config`
+
+    # insure the log file's directory exists
+    mkdir --parents `dirname "$cfile"`
+
     # Get the config info from the user.
     # Exit if the user cancels
     #
-    if ! get_info
+    if ! get_info "$cfile"
     then
         echo `date --rfc-3339=seconds` "User cancelled configupload" \
             >> "$scriptlog"
@@ -325,7 +335,7 @@ main() {
     fi
     
     # configure this machine
-    configure >> "$scriptlog" 2>&1
+    configure "$cfile" >> "$scriptlog" 2>&1
     echo `date --rfc-3339=seconds` "Normal exit configupload" >> "$scriptlog"
 }
     

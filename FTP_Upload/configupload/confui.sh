@@ -25,8 +25,7 @@
 # configuration values for configupload
 
 # names of the config file and its associated temp file
-conf_file=upload.conf
-conf_temp=.upload.conf
+conf_temp=.uploader.conf
 
 # standard height and width for message boxes
 height=13
@@ -92,12 +91,17 @@ cancel_dialog() {
     fi
 }
 
-# create the temporary config file
+# create the temporary config file.
+# If there is an extant config file, use the data in it to populate
+# the temporary config file.
+#
+# usage: create_conftemp config_file
 #
 create_conftemp() {
-    if [ -r "$conf_file" ]
+    local cfile="$1"
+    if [ -r "$cfile" ]
     then
-        cp "$conf_file" "$conf_temp"
+        cp "$cfile" "$conf_temp"
         sed -i "/^#>>/d" "$conf_temp"    # remove old comment header
         sed -i '1{x;p;x;}' "$conf_temp"  # insert blank line at top of file
     else
@@ -115,9 +119,12 @@ create_conftemp() {
 # gather the required config info from the user by displaying a series
 # of dialog boxes. Return zero if successful or non-zero if user cancels
 #
+# usage: get_info config_file
+#
 get_info() {
+    local cfile="$1"
 
-    create_conftemp
+    create_conftemp "$cfile"
 
     local esc="\n\n                [Press ESC to cancel]"
     
@@ -140,6 +147,7 @@ get_info() {
         m="${m}configure the software required. "
         m="${m}This program does not use the mouse. "
         m="${m}Move the cursor by using the TAB key or the arrow keys. "
+        m="${m}Hit the Enter key when done with each entry."
         m="${m}\n\n"
         m="${m}NOTE: If you have not upgraded this machine in the last "
         m="${m}couple months (or ever), press ESC to cancel and run these two "
@@ -193,8 +201,11 @@ get_info() {
         ;;
     3)
         title="Camera's FTP User Name For This Machine"
-        m="${m}Enter the user name the camera will use when connecting to "
-        m="${m}this machine via FTP to upload images."
+        m="${m}Enter the user name of the account "
+        m="${m}the camera will use when connecting to "
+        m="${m}this machine via FTP to upload images.  "
+        m="${m}If this account does not yet exist on this machine, "
+        m="${m}it will be created."
         confvalbox "$title" "$m$esc" um_cam_user > /dev/null
         step=`expr $step + $?`
         ;;
@@ -227,7 +238,8 @@ get_info() {
         ;;
     6)
         title="Domain Name of the Cloud Server"
-        m="${m}Enter the domain name for the cloud server that this "
+        m="${m}Enter the domain name or the IP address of the cloud server "
+        m="${m}that this "
         m="${m}machine will upload images to, e.g., yourneighborhood.org."
         confvalbox "$title" "$m$esc" cs_name > /dev/null
         step=`expr $step + $?`
@@ -250,21 +262,22 @@ get_info() {
         title="Cloud Server FTP Directory"
         m="${m}Enter the name of the directory within the cloud server "
         m="${m}account into which this machine will upload images. This "
-        m="${m}is usually a domain name representing the domain portion "
+        m="${m}may be a domain name representing the domain portion "
         m="${m}of the URL where the images can be viewed, e.g., "
-        m="${m}images.yourneighborhood.org."
+        m="${m}images.yourneighborhood.org. "
+        m="${m}For AWS cloud servers, this is empty."
         confvalbox "$title" "$m$esc" cs_ftp_dir > /dev/null
         step=`expr $step + $?`
         ;;
     10)
         title="Ready to Install"
-        m="${m}Ready in install and configure this machine. "
+        m="${m}Ready to install and configure this machine. "
         m="${m}Select Install to proceed or Prev to go back."
         whiptail --title "$title" --yes-button Install --no-button "Prev" \
             --yesno "$m$esc" $height $width
         case $? in
             0)  # Install button
-                mv "$conf_temp" "$conf_file"
+                mv "$conf_temp" "$cfile"
                 break
                 ;;
 
@@ -287,7 +300,7 @@ get_info() {
 
         if cancel_dialog $save_offer
         then
-            mv "$conf_temp" "$conf_file"
+            mv "$conf_temp" "$cfile"
         fi
         return 1
         ;;

@@ -21,6 +21,33 @@
 #
 ################################################################################
 
+# Find the configuration file.
+# Look in several directories and return the pathname of the
+# first configuration file found.  If none is found, return
+# the pathname we think is best to save the file.
+#
+find_config() {
+    local prefdir=/etc/opt/ftp_upload   # preferred dir for config file
+
+    local tr=""     # root dir for config files during unit testing
+    if [ $UNIT_TEST_IN_PROGRESS ]
+    then
+        tr="$TESTING_ROOT"
+    fi
+
+    local confdirs=". $tr$prefdir $tr/etc/ftp_upload $tr/etc"
+    for d in $confdirs
+    do
+        local conffile="$d/uploader.conf"
+        if [ -f "$conffile" ]
+        then
+            echo "$conffile"
+            return 0
+        fi
+    done
+    echo "$prefdir/uploader.conf"
+}
+
 # Set the value of a name=value string in a config file to the 
 # specified value.  
 # If the file does not exist, or is not writeable, return non-zero status.
