@@ -127,6 +127,16 @@ test_existing_key_pair_but_not_set_up() {
     run_setupkeypair
 }
 
+# this is simpulating a keypair owned by someone else
+test_existing_key_pair_but_no_read_writre() {
+    # generate a key pair to be the "existing" one
+    echo | ssh-keygen -q -t rsa -f $test_privkey > /dev/null 2>&1
+    chmod 0 $test_privkey
+    chmod 0 $test_privkey.pub
+
+    run_setupkeypair
+}
+
 test_existing_key_with_passphrase() {
     # create a key pair with a passphrase on the private key
     ssh-keygen -q -t rsa -N testphrase -f "$test_privkey"

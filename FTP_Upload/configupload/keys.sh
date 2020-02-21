@@ -38,10 +38,11 @@ setupkeypair () {
 
     # see if we have a private key.
     # If we do, see if it's bad or needs a passphrase. If either or these
-    # is true, move the key aside
+    # is true, move the key aside and also move any public key aside
     #
     local genpubkey
     local privkeyfile=$HOME/.ssh/id_rsa 
+    local pubkeyfile=$HOME/.ssh/id_rsa.pub
     if [ -e $privkeyfile ]
     then
         genpubkey=""
@@ -49,6 +50,11 @@ setupkeypair () {
         then
             echo "Moving bad private key aside"
             mv $privkeyfile $privkeyfile.orig
+            if [ -e $pubkeyfile ]
+            then
+                echo "Moving old public key aside"
+                mv $pubkeyfile $pubkeyfile.orig
+            fi
         fi
     fi
 
@@ -86,7 +92,6 @@ setupkeypair () {
     # If we don't have a public key, or the one we have doesn't match
     # the private key, generate and save the correct public key
     #
-    local pubkeyfile=$HOME/.ssh/id_rsa.pub
     if genpubkey="`echo | $SUDOLU ssh-keygen -q -y -f $privkeyfile`"
     then
         local pubkey="`sed 's/\([^ ][^ ]*  *[^ ][^ ]*\).*$/\1/' $pubkeyfile`"
@@ -122,6 +127,7 @@ setupkeypair () {
         -o 'PreferredAuthentications=publickey' \
         -o 'StrictHostKeyChecking=no' $racct exit 2>&1`"
     then
+        echo "$sshmsg"
         echo "Cannot ssh to server even though we just set up a key pair!"
         return 1
     fi

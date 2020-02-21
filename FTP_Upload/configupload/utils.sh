@@ -88,10 +88,14 @@ get_config() {
     echo -n ${val:="$3"}
 }
 
-# get the original logged in user (because logname and "who am i" don't work)
+# get the original logged in user.
+# We're doing it this way because logname and "who am i" don't work on
+# Ubuntu 16.04 and "ps T" subtly changed from 16.04 to 18.04
 #
 getluser () {
-    ps Tuf --no-headers | sed -e '/ .*/s///' -e q
+    # ps Tuf --no-headers | sed -e '/ .*/s///' -e q
+    local tty=`tty | grep -e 's-^/dev/--'`
+    who | grep "$tty" | sed -e '/ .*/s///' -e q
 }
 
 # Create a directory owned by root if it does not already exist.
