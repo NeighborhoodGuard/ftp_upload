@@ -28,7 +28,7 @@
 # CommunityView software.
 
 # version of the configupload software
-version="2.2.0"
+version="2.3.0"
 
 . ./utils.sh
 . ./confui.sh
@@ -112,16 +112,6 @@ configure() {
     trap errorexit EXIT
     set -e
     
-    # set up this machine's NetBIOS name
-    #
-    task="updating this machine's hostname"
-    echo "***** $task" | tee /dev/tty
-    local hostname="`get_config $cfg um_name`"
-    hostnamectl set-hostname $hostname
-    sed -i "s/127\\.0\\.1\\.1.*$/127.0.1.1\t$hostname/" /etc/hosts
-    # restart the daemons that advertise our name; this list may be incomplete
-    systemctl restart avahi-daemon.service systemd-logind.service
-    
     task="updating the available system software listing"
     echo "***** $task" | tee /dev/tty
     # update and upgrade the system
@@ -140,10 +130,27 @@ configure() {
         | debconf-set-selections   # info output to log
         
     # install all the required packages
-    local pkgs="openssh-server sshpass tightvncserver proftpd samba shunit2"
+    local pkgs=""
+    # avahi-related packages; not clear if this exactly the right set
+    pkgs="$pkgs avahi-daemon avahi-discover avahi-utils libnss-mdns"
+    # other packages
+    pkgs="$pkgs openssh-server sshpass proftpd samba shunit2"
     install_wait "$pkgs"    # info output to log
-    systemctl restart nmbd  # restart in case nmbd was already installed
 
+    # set up this machine's NetBIOS, mDNS and DNS-SD name
+    #
+    task="updating this machine's hostname"
+    echo "***** $task" | tee /dev/tty
+    local hostname="`get_config $cfg um_name`"
+    hostnamectl set-hostname $hostname
+    sed -i "s/127\\.0\\.1\\.1.*$/127.0.1.1\t$hostname/" /etc/hosts
+    # reload/restart the daemons that advertise our name--this list may be
+    # incomplete.
+    # Should restart systemd-logind as well, but apparent bug causes Gnome to
+    # crash and log out console user when it's restarted on 18.04
+    systemctl reload avahi-daemon.service
+    systemctl restart nmbd #systemd-logind.service
+    
     # create the ftp_upload directories for code, log and images
     #
     task="creating required directories"

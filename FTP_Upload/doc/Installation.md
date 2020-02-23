@@ -3,7 +3,7 @@
 
 As of v2.0.0, FTP_Upload includes an automated installer for Debian derivatives of Linux. The installer uses a simple UI to ask the user some configuration questions, then installs and configures all the required system software plus the FTP_Upload software needed to turn the system into an upload machine that will accept images uploaded from IP cameras and in turn transfer them to a cloud server running [Neighborhood Guard's Community View Software](https://github.com/NeighborhoodGuard/CommunityView).
 
-We developed the installer on Ubuntu v16.04 LTS, and recommend you use the current version of Ubuntu for your upload machine.
+We developed the installer on Ubuntu Dekstop 16.04 LTS, and recommend you use the current version of Ubuntu for your upload machine.  FTP_Upload has also been tested on Ubuntu Server 18.04 LTS.
 
 ### Installation Steps
 
@@ -19,15 +19,16 @@ We developed the installer on Ubuntu v16.04 LTS, and recommend you use the curre
         chmod 700 ~/.ssh
         chmod 600 ~/.ssh/id_rsa
 
-1. An SSH daemon is required for the remote access software which provides command-line access to the uploader from a remote machine.  Install an SSH daemon using the following command:
+1. Using a Web browser, go to Neighborhood Guard's FTP_Upload repository on Github: [https://github.com/NeighborhoodGuard/ftp_upload](FTP_Upload repository on Github: https://github.com/NeighborhoodGuard/ftp_upload).  Click the `Clone or download` button, and select the `Download ZIP` item.
 
-        sudo apt-get install openssh-server
+    If you are installing onto an Ubuntu Server, which does not have a graphical environment, download the ZIP file using the following command,
 
-1. Using a Web browser, go to Neighborhood Guard's FTP_Upload repository on Github: https://github.com/NeighborhoodGuard/ftp_upload
+        wget https://github.com/NeighborhoodGuard/ftp_upload/archive/master.zip
 
-1. Click the `Clone or download` button, and select the `Download ZIP` item.
+1. After the ZIP file has been downloaded, extract it into the home directory of the account (or other convenient place).  If you are installing on an Ubuntu Server version, you will probably have to install an unzipping utility first then unzip the file. For example,
 
-1. After the ZIP file has been downloaded, extract it into the home directory of the account (or other convenient place).
+        sudo apt-get install unzip
+        unzip master.zip
 
 1. Change to the FTP_Upload/configupload directory within the tree of extracted files, and run the script `configupload.sh` using the `sudo` command, and type your password if requested.  For example,
 

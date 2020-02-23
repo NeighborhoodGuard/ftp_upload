@@ -1,5 +1,18 @@
 # Release Notes for FTP_Upload
 
+## v2.3.0 - 2020/02/22
+_Doug Kerr_
+
+* Test on Ubuntu Server 18.04 LTS.  Fix bugs related to inconsistencies between 16.04 and 18.04, and bugs related to installing on a Server rather than Desktop version of the OS.
+
+### Known Issues
+
+* The installation and configuration code expects that the cloud server's upload account (the account on the cloud server to which images files will be uploaded) can be accessed via SSH using a password.  In cases such as AWS where use of a password is deprecated in favor of using a private-public keys, there is no provision yet in the configuration code to enter a private key for access to the upload account.  For the installation software to succeed, the private key must be copied to `~/.ssh/id_rsa` in the upload machine's maintenance account prior to running the installation software.
+* The remote access code incorrectly handles the target machine name in a case sensitive manner.  Until this is fixed, the machine name entered when running `starttunnel` must be identical in case to the name given to the machine during the setup process.
+* Sometimes the tunnel test (`test_tunnel`) in `testSystem.sh` fails on the first attempt, even though the tunnel software is properly set up.
+* Need to add a graceful shutdown mechanism so that, for example, FTP connections are not terminated in mid-transfer.
+* The internal `current_priority_threads` counter appears to slowly increase, rather than reflecting the correct number of threads that are uploading the files for "today."  Increases are on the order of one bogus count for every 5,000 to 10,000 files transferred.  This is not a major problem, but has the effect of slowly eliminating the multi-threading for transferring the current day's images, resulting in reduced performance. Workaround: restart the program.
+
 ## v2.2.0 - 2020/01/30
 _Doug Kerr_
 
@@ -7,16 +20,6 @@ _Doug Kerr_
 * Put the installer configuration file, `uploader.conf`, into a standard directory, `/etc/opt/ftp_upload`.
 * Fix a bug wherein the installer would sometimes ask for a passphrase when generating an SSH key.
 * Make various improvements to the documentation.
-
-### Known Issues
-
-* The installer software does not install the SSH daemon that is needed for remote (command line)  access to the uploader.  Either before or after running the installer, you must manually install the SSH deamo. See the [Installation documentation](Installation.md).    
-* The installation and configuration code expects that the cloud server's upload account (the account on the cloud server to which images files will be uploaded) can be accessed via SSH using a password.  In cases such as AWS where use of a password is deprecated in favor of using a private-public keys, there is no provision yet in the configuration code to enter a private key for access to the upload account.  For the installation software to succeed, the private key must be copied to `~/.ssh/id_rsa` in the upload machine's maintenance account prior to running the installation software.
-* The remote access code incorrectly handles the target machine name in a case sensitive manner.  Until this is fixed, the machine name entered when running `starttunnel` must be identical in case to the name given to the machine during the setup process.
-* Sometimes the tunnel test (`test_tunnel`) in `testSystem.sh` fails on the first attempt, even though the tunnel software is properly set up.
-* Need to add a graceful shutdown mechanism so that, for example, FTP connections are not terminated in mid-transfer.
-* The internal `current_priority_threads` counter appears to slowly increase, rather than reflecting the correct number of threads that are uploading the files for "today."  Increases are on the order of one bogus count for every 5,000 to 10,000 files transferred.  This is not a major problem, but has the effect of slowly eliminating the multi-threading for transferring the current day's images, resulting in reduced performance. Workaround: restart the program.
-
 
 ## v2.1.0 - 2018/08/22
 _Doug Kerr_
