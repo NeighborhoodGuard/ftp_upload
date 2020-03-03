@@ -25,7 +25,6 @@ avahi_browse() {
 arp1=`cat << StopHere
 Address                  HWtype  HWaddress           Flags Mask            Iface
 169.254.119.131          ether   00:40:8c:ef:e2:f1   C                     enp3s0
-169.254.119.132          ether   00:40:8c:ef:e2:f2   C                     enp3s0
 169.254.119.133          ether   00:40:8c:ef:e2:f3   C                     enp3s0
 192.168.1.128            ether   f4:5c:89:89:89:63   C                     enp3s0
 192.168.1.1              ether   60:a4:4c:d2:a4:b8   C                     enp3s0
@@ -33,6 +32,7 @@ Address                  HWtype  HWaddress           Flags Mask            Iface
 192.168.1.81             ether   00:40:8c:ef:e2:f1   C                     enp3s0
 192.168.1.82             ether   00:40:8c:ef:e2:f2   C                     enp3s0
 192.168.1.83             ether   00:40:8c:ef:e2:f3   C                     enp3s0
+169.254.119.132          ether   00:40:8c:ef:e2:f2   C                     enp3s0
 StopHere
 `
 ab1=`cat << StopHere
