@@ -11,10 +11,16 @@ each camera found to the standard output.
 Each summary line consists of the IP address of the camera,
 its fully qualified host name
 and its advertised service name.
-findaxiscam uses \fBavahi-browse\fR to find the cameras via mDNS-SD.
-The second and third fields are as returned by \fBavahi-browse\fR.
+findaxiscam uses \fIavahi-browse\fR to find the cameras via mDNS-SD.
+The second and third fields are as returned by \fIavahi-browse\fR.
 All three fields in the summary line are separated by spaces,
 and the service name field may contain spaces.
+.SH BUGS
+With the current implementation of \fIavahi-daemon\fR, it may be theoretically
+impossible to guarantee that `findaxiscam` will be able
+to find the DHCP (as opposed to ZeroConf) address
+of the Axis camera if the machine it's running on has more than one network
+interface.
 .SH AUTHOR
 Written by Douglas Kerr.
 .SH COPYRIGHT

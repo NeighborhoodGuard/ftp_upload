@@ -1,18 +1,24 @@
 # Release Notes for FTP_Upload
 
-## v2.3.0 - 2020/02/22
+## v2.3.1 - 2020/03/05
 _Doug Kerr_
 
-* Test on Ubuntu Server 18.04 LTS.  Fix bugs related to inconsistencies between 16.04 and 18.04, and bugs related to installing on a Server rather than Desktop version of the OS.
+* Fix bug in `findaxiscam`.
+* Implement `addllroute` service to insure that there is a link-local (aka ZeroConf) route in the routing table. This should maximize the chance that `findaxiscam` will be able to find a camera on the local network.
 
 ### Known Issues
 
+* With the current implementation of `avahi-daemon`, it may be theoretically impossible to guarantee that `findaxiscam` will be able to find the DHCP (as opposed to ZeroConf) address of the Axis camera if the machine it's running on has more than one network interface.
 * The installation and configuration code expects that the cloud server's upload account (the account on the cloud server to which images files will be uploaded) can be accessed via SSH using a password.  In cases such as AWS where use of a password is deprecated in favor of using a private-public keys, there is no provision yet in the configuration code to enter a private key for access to the upload account.  For the installation software to succeed, the private key must be copied to `~/.ssh/id_rsa` in the upload machine's maintenance account prior to running the installation software.
 * The remote access code incorrectly handles the target machine name in a case sensitive manner.  Until this is fixed, the machine name entered when running `starttunnel` must be identical in case to the name given to the machine during the setup process.
 * Sometimes the tunnel test (`test_tunnel`) in `testSystem.sh` fails on the first attempt, even though the tunnel software is properly set up.
 * Need to add a graceful shutdown mechanism so that, for example, FTP connections are not terminated in mid-transfer.
 * The internal `current_priority_threads` counter appears to slowly increase, rather than reflecting the correct number of threads that are uploading the files for "today."  Increases are on the order of one bogus count for every 5,000 to 10,000 files transferred.  This is not a major problem, but has the effect of slowly eliminating the multi-threading for transferring the current day's images, resulting in reduced performance. Workaround: restart the program.
 
+## v2.3.0 - 2020/02/22
+_Doug Kerr_
+
+* Test on Ubuntu Server 18.04 LTS.  Fix bugs related to inconsistencies between 16.04 and 18.04, and bugs related to installing on a Server rather than Desktop version of the OS.
 ## v2.2.0 - 2020/01/30
 _Doug Kerr_
 
