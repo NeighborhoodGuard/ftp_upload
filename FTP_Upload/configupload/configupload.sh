@@ -28,7 +28,7 @@
 # CommunityView software.
 
 # version of the configupload software
-version="2.3.0"
+version="2.3.1"
 
 . ./utils.sh
 . ./confui.sh
@@ -60,7 +60,7 @@ install_wait() {
 }
 
 
-# directories required for install of ftp_upload and cktunnel
+# directories required for install of ftp_upload, cktunnel & addllroute
 #
 code_dir=/opt/ftp_upload
 config_dir=/etc/opt/ftp_upload
@@ -71,6 +71,7 @@ proc_dir=$var_dir/processed
 initd_dir=/etc/init.d
 tun_code_dir=/opt/cktunnel
 tun_config_dir=/etc/opt/cktunnel
+addrt_code_dir=/opt/addllroute
 systemd_dir=/lib/systemd/system
 fac_code_dir=/opt/findaxiscam
 fac_link_dir=/usr/local/bin
@@ -163,6 +164,7 @@ configure() {
     create_dir $proc_dir
     create_dir $tun_code_dir
     create_dir $tun_config_dir
+    create_dir $addrt_code_dir
     create_dir $fac_code_dir
     create_dir $fac_man_dir
     create_dir $fac_lman_dir
@@ -179,6 +181,9 @@ configure() {
     chmod +x $tun_code_dir/cktunnel
     cp $our_dir/../configupload/utils.sh $tun_code_dir
     cp $our_dir/../tunnel/cktunnel_example.conf $tun_config_dir
+
+    cp $our_dir/../addllroute/addllroute.sh $addrt_code_dir/addllroute
+    chmod +x $addrt_code_dir/addllroute
 
     fac=findaxiscam
     cp $our_dir/../findaxiscam/findaxiscam.sh $fac_code_dir/$fac
@@ -212,6 +217,17 @@ configure() {
     chmod 755 $tgt
     chown root:root $tgt
     systemctl enable cktunnel.service
+
+    # install the addllroute service file
+    #
+    systemctl stop addllroute.service || true
+    systemctl disable addllroute.service || true
+    tgt=$systemd_dir/addllroute.service
+    rm -f "$tgt"
+    cp $our_dir/../addllroute/addllroute.service "$tgt"
+    chmod 755 $tgt
+    chown root:root $tgt
+    systemctl enable addllroute.service
 
     # set up the config values for ftp_upload & cktunnel
     #
@@ -302,6 +318,10 @@ configure() {
     task="starting cktunnel"
     echo "***** $task" | tee /dev/tty
     systemctl start cktunnel.service
+    
+    task="starting addllroute"
+    echo "***** $task" | tee /dev/tty
+    systemctl start addllroute.service
     
     # Turn off error trap
     set +e

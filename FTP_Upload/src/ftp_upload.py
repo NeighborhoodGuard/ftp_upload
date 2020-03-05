@@ -45,7 +45,7 @@ import StringIO
 import ConfigParser
 import platform
 
-version_string = "2.3.0"
+version_string = "2.3.1"
 
     
 max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.

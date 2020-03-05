@@ -7,36 +7,43 @@ then
 fi
 
 # Find Axis IP cameras using mDNS-SD.
-# Select the relevant parts of the avahi response. Avahi only outputs
-# one of the IP addresses in the mDNS-SD reply. :-P
+# Select the relevant parts of the avahi response. 
+# Avahi only outputs one of the IP addresses in the mDNS-SD reply. :-P
+# Colonize the MAC address shown by Avahi.
 # Change the lame backslash escapes in Avahi -p output into
 # '|' "escapes" to avoid the shell interpreting the backslashes.
-# For avahi responses that show a ZeroConf address, ping that address
-# to bring the device's addresses into the ARP table (it's not the
-# ping, it's the lookup that does it), find the device's MAC address in
-# the table, then see if there's a regular IP address associated with it.
-# If so, show that address, else the ZeroConf address.
-# Filter the (*decimal*!) escape for space out of the description.
+# If the Avahi IP address is not a ZeroConf address, print the result.
+# If it is a ZeroConf address, ping the address to try to bring
+# the non-ZeroConf address into the ARP table
+# then, search through the ARP table and find
+# the first IP address for the MAC address that is not a ZeroConf address.
+# If we don't find one, print ZeroConf address.
+# Finally, filter the (*decimal*!) escape for space out of the description.
 #
 $AVAHI_BROWSE -t -r -p _axis-video._tcp \
-| awk -F ';' '/^=/{print $8, $7, $4}' \
-| sed 's/\\/|/g' \
+| awk -F ';' '/^=/{print $4, $7, $8, $10}' \
+| sed -e \
+    's/"macaddress=\(..\)\(..\)\(..\)\(..\)\(..\)\(..\)"/\1:\2:\3:\4:\5:\6/' \
+    -e 's/\\/|/g' \
 | while read line
 do
     set $line
-    ipaddr=$1
-    case $1 in
+    displayname=$1
+    netname=$2
+    ipaddr=$3
+    hwaddr=$4
+    case $ipaddr in
       169.254.*) 
-        zcip=$1
-        ping -c 1 $zcip > /dev/null
-        hwaddr=`arp -n | awk /$zcip/'{print $3}'`
-        ipaddr=`arp -n | grep -v $zcip | awk /$hwaddr/'{print $1; exit}'`
+    	zcip=$ipaddr
+	ping -c 1 $zcip > /dev/null
+        ipaddr=`arp -n | grep -v '^169\.254\.' | grep -i "$hwaddr" \
+	        | awk '{print $1; exit}'`
         if [ -z "$ipaddr" ]
         then
             ipaddr=$zcip
         fi
         ;;
     esac
-    echo $ipaddr $2 "$3" | sed 's/|032/ /g'
+    echo $ipaddr $netname "$displayname" | sed 's/|032/ /g'
 done
-
+exit
