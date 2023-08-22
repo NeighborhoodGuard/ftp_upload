@@ -132,6 +132,10 @@ configure() {
         
     # install all the required packages
     local pkgs=""
+    # switch to Python3
+    pkgs="$pkgs python-is-python3"
+    # add net-tools to get ifconfg and route cmds for addllroute
+    pkgs="$pkgs net-tools"
     # avahi-related packages; not clear if this exactly the right set
     pkgs="$pkgs avahi-daemon avahi-discover avahi-utils libnss-mdns"
     # other packages
