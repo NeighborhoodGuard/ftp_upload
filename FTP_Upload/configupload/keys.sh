@@ -40,9 +40,10 @@ setupkeypair () {
     # If we do, see if it's bad or needs a passphrase. If either or these
     # is true, move the key aside and also move any public key aside
     #
+    local uhome=`$SUDOLU sh -c 'echo $HOME'`
     local genpubkey
-    local privkeyfile=$HOME/.ssh/id_rsa 
-    local pubkeyfile=$HOME/.ssh/id_rsa.pub
+    local privkeyfile=$uhome/.ssh/id_rsa 
+    local pubkeyfile=$uhome/.ssh/id_rsa.pub
     if [ -e $privkeyfile ]
     then
         genpubkey=""
