@@ -30,7 +30,7 @@
 # Description:       Upload camera image files to cloud server.
 ### END INIT INFO
 
-DAEMON=python
+DAEMON=python3
 DAEMONOPTS="/opt/ftp_upload/ftp_upload.py"
 LOG_PATH="/var/opt/ftp_upload/log"
 
