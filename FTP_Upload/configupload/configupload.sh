@@ -147,11 +147,12 @@ configure() {
     local hostname="`get_config $cfg um_name`"
     hostnamectl set-hostname $hostname
     sed -i "s/127\\.0\\.1\\.1.*$/127.0.1.1\t$hostname/" /etc/hosts
-    # reload/restart the daemons that advertise our name--this list may be
+    # restart the daemons that advertise our name--this list may be
     # incomplete.
     # Should restart systemd-logind as well, but apparent bug causes Gnome to
     # crash and log out console user when it's restarted on 18.04
-    systemctl reload avahi-daemon.service
+    # Note: reloading avahi-daemon doesn't pick up new name; must restart
+    systemctl restart avahi-daemon.service
     systemctl restart nmbd #systemd-logind.service
     
     # create the ftp_upload directories for code, log and images
