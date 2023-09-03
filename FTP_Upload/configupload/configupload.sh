@@ -256,9 +256,11 @@ configure() {
     local server="`get_config $cfg cs_name`"
     set_config_value $conf acct "$user@$server"
 
-    # starttunnel conf (we're editing the sh source, here)
-    conf="$our_dir/../tunnel/starttunnel.sh"
+    # starttunnel conf
+    conf="$our_dir/../tunnel/starttunnel"
+    cp "$our_dir/../tunnel/starttunnel.sh" "$conf"
     set_config_value "$conf" ACCT "$user@$server"
+    chmod +x "$conf"
 
     # configure for camera FTP.  It seems that the only simple way to
     # deny login to the camera user but allow the camera user to connect
