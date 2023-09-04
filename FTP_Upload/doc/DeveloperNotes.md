@@ -128,7 +128,7 @@ If you are using Eclipse, it will set the `PYTHONPATH` automatically.
 
 The easiest way to run the tests is to `cd` to the `FTP_Upload/src/test` directory and give the command,
 
-	python -u TestUpload.py
+	python3 -u TestUpload.py
 	
 If you are using Eclipse, just select TestUpload.py either in the source window or the Package Explorer and click the Run button.
 

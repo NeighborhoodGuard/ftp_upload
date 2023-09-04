@@ -5,6 +5,7 @@ _Doug Kerr_
 
 * Upgrade to Python 3
 * Upgrade to Ubuntu 22.04 LTS
+* Fix minor bugs
 
 ### Known Issues
 

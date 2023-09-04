@@ -14,16 +14,16 @@ We developed the installer on Ubuntu Dekstop 16.04 LTS, and recommend you use th
         sudo apt-get update
         sudo apt-get upgrade
 
-1. If you have an SSH private key for the upload account on the cloud server,
+1. When you run the installation software below, it will check for a private key to access the upload account on the cloud server. If a private key does not exist,
+it will create a key pair for use with the upload account and install the public key on the server and put the private key into the file `~/.ssh/id_rsa` in the maintentance account on the upoad machine.
+
+    If you already have an SSH private key for the upload account on the cloud server,
 copy the private key into the file `~/.ssh/id_rsa` in the maintenance account now.  If the `.ssh` directory does not exist, create it using the command `mkdir ~/.ssh`.  After copying the private key file into `~/.ssh/id_rsa`, make sure that both the `~/.ssh` directory and the key file are readable only by the maintenance account, e.g., 
 
         chmod 700 ~/.ssh
         chmod 600 ~/.ssh/id_rsa
 
-Note that this private key will also be used on any remote-access client machine to establish a remote-access connection to the upload machine.
-See [Remote Acess](RemoteAccess.md).
-
-1. Using a Web browser, go to Neighborhood Guard's FTP_Upload repository on Github: [https://github.com/NeighborhoodGuard/ftp_upload](FTP_Upload repository on Github: https://github.com/NeighborhoodGuard/ftp_upload).  Click the `Clone or download` button, and select the `Download ZIP` item.
+1. Using a Web browser, go to Neighborhood Guard's [FTP_Upload repository](https://github.com/NeighborhoodGuard/ftp_upload) on Github.  Click the `Clone or download` button, and select the `Download ZIP` item.
 
     If you are installing onto an Ubuntu Server, which does not have a graphical environment, download the ZIP file using the following command,
 
