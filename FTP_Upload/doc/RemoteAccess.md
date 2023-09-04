@@ -8,14 +8,14 @@ We'll call the machine that you're going to use to access the upload machine the
 
 The remote access mechanism uses SSH (Secure Shell), so your Linux client machine must have OpenSSH installed.
 
-Copy the file `starttunnel.sh` from the `FTP_Upload/tunnel` directory to someplace convenient on your Linux client machine.  Run an editor on the file, and near the top of the file, in the Configuration Section, change the `ACCT=myaccount@myhost.com` line to substitute the account on the cloud server that you are using to upload image files.  For example, if your cloud server is called "myneighorhood.org" and the user name is "camera", you would change the line to read
-
-    ACCT=camera@myneighborhood.org
+Copy the file `starttunnel` from the `FTP_Upload/tunnel` directory to someplace convenient on your Linux client machine.
     
-After you have made this change, make sure the file has execute permissions and move move the `starttunnel.sh` file into a directory in your execution path, such as the `bin` directory under your home directory, and change its name to `starttunnel`.  For example,
+Make sure the file has execute permissions and move move the `starttunnel` file into a directory in your execution path, such as the `bin` directory under your home directory, and change its name to `starttunnel`.  For example,
 
-    chmod +x starttunnel.sh
-    mv starttunel.sh $HOME/bin/starttunnel
+    chmod +x starttunnel
+    mv starttunel $HOME/bin/starttunnel
+
+You need to copy the private key file for the upload account on your cloud server to the file `$HOME/.ssh/id_rsa`.  
 
 The `starttunnel` script will give you SSH command-line access to the upload machine. It will create a "tunnel" from your client machine, through the cloud server to the upload machine. On the client machine, the tunnel will terminate in a TCP port that you select.  Once the tunnel is created, you can connect your SSH client to the selected TCP port in order to get command line access to the upload machine.  You can pick any port number between 1025 and 49151.
 

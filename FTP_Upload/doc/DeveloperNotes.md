@@ -5,6 +5,9 @@ With release v2.0.0, we added a simple installer for Debian-derivative Linux sys
 
 In release v2.1.0, we added the `findaxiscam` utility, along with its manual page, to find Axis IP cameras on the local network.
 
+In release v2.4.0, the Python code was upgraded to Python 3 and the overall
+package was upgraded to run on Ubuntu 22.04 LTS.
+
 ## Unit and System Tests ##
 ### Overview ###
 There are unit tests and system tests included for much of the code.  We use PyUnit (which is part of the standard Python distribution) for the Python code tests  and [shunit2](http://manpages.ubuntu.com/manpages/trusty/man1/shunit2.1.html) to test the shell scripts such as `configupload.sh` and its supporting files.  The tests for a given set of code are generally in a `test` subdirectory below the code that will be tested.  These tests are intended to be run on the development machine to validate functionality as the code is being worked on.
@@ -13,6 +16,8 @@ There is also a simple system test that performs an end-to-end check of the both
 
 ### System Tests
 In `FTP_Upload/test` there is a simple system test called `testSystem.sh` that uses `shunit2` to provide test library support.  This test must be run on the upload machine (not the development machine) after the installation process is complete.  The cloud server that the machine is configured to upload to must also be available.
+_N.B.: As of release v2.4.0, some of the tests in testSystem.sh are buggy and
+will be fixed in future releases._
 
 To run the tests, change to the `FTP_Upload/test` directory on the upload machine, and give the command,
 
