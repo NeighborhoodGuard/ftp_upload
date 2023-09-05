@@ -41,11 +41,11 @@ import logging.handlers
 import sys
 import traceback
 import signal
-import StringIO
-import ConfigParser
+import io
+import configparser
 import platform
 
-version_string = "2.3.1"
+version_string = "2.4.0"
 
     
 max_threads = 8 # max number of total threads when needed one thread will be used for purging job, rest of time all threads will be used for upload.
@@ -77,7 +77,7 @@ def change_create_ftp_dir(ftp_connection, dirname):
             try:
                 ftp_connection.mkd(dirname)
                 ftp_connection.cwd(dirname)     
-            except Exception, e:
+            except Exception as e:
                 logging.warning("can't make/change to ftp directory %s" % dirname)
                 logging.exception(e)
                 return False
@@ -126,12 +126,12 @@ def connect_to_ftp():
         logging.debug("changing directory to: %s", cfg.ftp_destination)
         ftp_connection.cwd(cfg.ftp_destination)
         logging.debug("current directory is: %s", ftp_connection.pwd())
-    except ftplib.error_perm, e:
+    except ftplib.error_perm as e:
         logging.error("Failed to open FTP connection, %s", e)
         ftp_connection = None
         logging.info("Sleeping 10 minutes before trying again")
         time.sleep(600)
-    except Exception, e:
+    except Exception as e:
         logging.error("Unexpected exception in connect_to_ftp():")
         logging.exception(e)
         if ftp_connection != None:
@@ -145,7 +145,7 @@ def quit_ftp(ftp_connection):
         try:
             ftp_connection.quit()
             logging.debug("ftp connection successfully closed")
-        except Exception, e:
+        except Exception as e:
             #logging.warning("Exception during FTP.quit():", e)
             logging.warning("Exception during FTP.quit():")
             logging.exception(e)
@@ -190,11 +190,11 @@ def storefile(ftp_dir, filepath, donepath, filename, today):
                     os.makedirs(donedir)
                     
                 shutil.move(filepath, donepath)
-            except Exception, e:
+            except Exception as e:
                 logging.warning("can't move file %s, possible sharing violation", filepath )
                 logging.exception(e)
 
-        except Exception, e:
+        except Exception as e:
             logging.error("Failed to store ftp file: %s: %s", filepath, e)
             logging.exception(e)
             filehandle.close()
@@ -316,7 +316,7 @@ def storeday(daydir, today=False):
         ftp_dir = cfg.ftp_destination + "/" + direc
         done_dir = os.path.join(cfg.processed_location, direc)
         storedir(dirpath, ftp_dir, done_dir, today)
-    except Exception, e:
+    except Exception as e:
         logging.exception(e)
     
     return
@@ -326,7 +326,7 @@ def storedays(daydirs):
     try:
         for daydir in daydirs:
             storeday(daydir)
-    except Exception, e:
+    except Exception as e:
         logging.error("Unexpected exception in storedays()")
         logging.exception(e)
     logging.info("Returning from storedays()")
@@ -337,7 +337,7 @@ def dumpstacks():
     to the log'''
     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
     code = []
-    for threadId, stack in sys._current_frames().items():
+    for threadId, stack in list(sys._current_frames().items()):
         code.append("\n# Thread: %s(%d)" % (id2name.get(threadId,""), threadId))
         for filename, lineno, name, line in traceback.extract_stack(stack):
             code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
@@ -443,9 +443,9 @@ def get_config(confpath=None):
     #
     sect = "forcedsection"
     conf_str = "[" + sect + "]\n"  + file_str
-    conf_fp = StringIO.StringIO(conf_str)
-    cp = ConfigParser.SafeConfigParser(defaults)
-    cp.readfp(conf_fp)
+    conf_fp = io.StringIO(conf_str)
+    cp = configparser.ConfigParser(defaults)
+    cp.read_file(conf_fp)
     
     # save the config items in the global config object
     #
@@ -484,7 +484,7 @@ def main():
     global uploads_to_do    # for testing only
     
     if not get_config():
-        print >> sys.stderr, "ftp_upload: Can't open config file!"
+        print("ftp_upload: Can't open config file!", file=sys.stderr)
         sys.exit(1)
         
     set_up_logging()
@@ -541,12 +541,12 @@ def main():
                 
             # hitting Ctl-C to dump the thread stacks will interrupt
             # MainThread's sleep and raise IOError, so catch it here
-            except IOError, e:
+            except IOError as e:
                 logging.warn("Main loop sleep interrupted")
                 
             if terminate_main_loop:     # for testing purposes only
                 break
-    except Exception, e:
+    except Exception as e:
         logging.error("Unexpected exception in main()")
         logging.exception(e)
         raise   # rethrow so unit test code will know something went wrong

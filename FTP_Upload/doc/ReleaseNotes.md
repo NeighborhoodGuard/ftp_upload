@@ -1,10 +1,11 @@
 # Release Notes for FTP_Upload
 
-## v2.3.1 - 2020/03/05
+## v2.4.0 - 2023/09/04
 _Doug Kerr_
 
-* Fix bug in `findaxiscam`.
-* Implement `addllroute` service to insure that there is a link-local (aka ZeroConf) route in the routing table. This should maximize the chance that `findaxiscam` will be able to find a camera on the local network.
+* Upgrade to Python 3
+* Upgrade to Ubuntu 22.04 LTS
+* Fix minor bugs
 
 ### Known Issues
 
@@ -13,7 +14,15 @@ _Doug Kerr_
 * The remote access code incorrectly handles the target machine name in a case sensitive manner.  Until this is fixed, the machine name entered when running `starttunnel` must be identical in case to the name given to the machine during the setup process.
 * Sometimes the tunnel test (`test_tunnel`) in `testSystem.sh` fails on the first attempt, even though the tunnel software is properly set up.
 * Need to add a graceful shutdown mechanism so that, for example, FTP connections are not terminated in mid-transfer.
+* The main test in `testSystem.sh`, `test_ftp_upload` currently requires that the test server's upload account home directory be the root of the file tree accessible via FTP.  This is not the case for the current CommunityView server, so the test will fail if the CommunityView server is used.
 * The internal `current_priority_threads` counter appears to slowly increase, rather than reflecting the correct number of threads that are uploading the files for "today."  Increases are on the order of one bogus count for every 5,000 to 10,000 files transferred.  This is not a major problem, but has the effect of slowly eliminating the multi-threading for transferring the current day's images, resulting in reduced performance. Workaround: restart the program.
+
+## v2.3.1 - 2020/03/05
+_Doug Kerr_
+
+* Fix bug in `findaxiscam`.
+* Implement `addllroute` service to insure that there is a link-local (aka ZeroConf) route in the routing table. This should maximize the chance that `findaxiscam` will be able to find a camera on the local network.
+
 
 ## v2.3.0 - 2020/02/22
 _Doug Kerr_

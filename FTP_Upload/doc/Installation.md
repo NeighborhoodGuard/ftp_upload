@@ -1,25 +1,29 @@
 # Installing FTP_Upload
-# Installing under Linux
+## Installing under Linux
 
 As of v2.0.0, FTP_Upload includes an automated installer for Debian derivatives of Linux. The installer uses a simple UI to ask the user some configuration questions, then installs and configures all the required system software plus the FTP_Upload software needed to turn the system into an upload machine that will accept images uploaded from IP cameras and in turn transfer them to a cloud server running [Neighborhood Guard's Community View Software](https://github.com/NeighborhoodGuard/CommunityView).
 
-We developed the installer on Ubuntu Dekstop 16.04 LTS, and recommend you use the current version of Ubuntu for your upload machine.  FTP_Upload has also been tested on Ubuntu Server 18.04 LTS.
+We developed the installer on Ubuntu Dekstop 16.04 LTS, and recommend you use the current version of Ubuntu for your upload machine.  FTP_Upload has been tested on Ubuntu Server 22.04 LTS.
 
 ### Installation Steps
 
 1. On the Linux machine where you wish to install the software, log into the account you wish to use to maintain FTP_Upload.  This account will be referred to as the "maintenance" account and must be able to run the `sudo` command.
 
-1. Prior to installing the software, we recommend that you upgrade your already installed software to the latest available. To do this, open a shell window and give the commands below. This process could take 30 minutes or so if your software has not been upgraded recently.
+1. Prior to installing the software, we recommend that you upgrade your already installed operation system software to the latest available. To do this, open a shell window and give the commands below. This process could take 30 minutes or so if your software has not been upgraded recently.
 
         sudo apt-get update
         sudo apt-get upgrade
 
-1. If you can only log in to the upload account on the cloud server by using an SSH private key, i.e., you cannot log in using a password, copy the private key into the file `~/.ssh/id_rsa` now.  If the `.ssh` directory does not exist, create it using the command `mkdir ~/.ssh`.  After copying the private key file into `~/.ssh/id_rsa`, make sure that both the `~/.ssh` directory and the key file are readable only by the maintenance account, e.g., 
+1. When you run the installation software below, it will check for the existence of an SSH private key to access the upload account on the cloud server. If a private key does not exist,
+it will create a key pair for use with the upload account, install the public key on the cloud server and put the private key into the file `~/.ssh/id_rsa` in the maintentance account on the upoad machine.
+
+    If you already have an SSH private key for the upload account on the cloud server,
+copy the private key into the file `~/.ssh/id_rsa` in the maintenance account now.  If the `.ssh` directory does not exist, create it using the command `mkdir ~/.ssh`.  After copying the private key file into `~/.ssh/id_rsa`, make sure that both the `~/.ssh` directory and the key file are readable only by the maintenance account, e.g., 
 
         chmod 700 ~/.ssh
         chmod 600 ~/.ssh/id_rsa
 
-1. Using a Web browser, go to Neighborhood Guard's FTP_Upload repository on Github: [https://github.com/NeighborhoodGuard/ftp_upload](FTP_Upload repository on Github: https://github.com/NeighborhoodGuard/ftp_upload).  Click the `Clone or download` button, and select the `Download ZIP` item.
+1. Using a Web browser, go to Neighborhood Guard's [FTP_Upload repository](https://github.com/NeighborhoodGuard/ftp_upload) on Github.  Click the `Clone or download` button, and select the `Download ZIP` item.
 
     If you are installing onto an Ubuntu Server, which does not have a graphical environment, download the ZIP file using the following command,
 

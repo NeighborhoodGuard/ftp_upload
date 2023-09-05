@@ -28,7 +28,7 @@
 # CommunityView software.
 
 # version of the configupload software
-version="2.3.1"
+version="2.4.0"
 
 . ./utils.sh
 . ./confui.sh
@@ -132,6 +132,8 @@ configure() {
         
     # install all the required packages
     local pkgs=""
+    # add net-tools for later ubuntu releases to get ifconfg and route cmds for addllroute
+    pkgs="$pkgs net-tools"
     # avahi-related packages; not clear if this exactly the right set
     pkgs="$pkgs avahi-daemon avahi-discover avahi-utils libnss-mdns"
     # other packages
@@ -145,11 +147,12 @@ configure() {
     local hostname="`get_config $cfg um_name`"
     hostnamectl set-hostname $hostname
     sed -i "s/127\\.0\\.1\\.1.*$/127.0.1.1\t$hostname/" /etc/hosts
-    # reload/restart the daemons that advertise our name--this list may be
+    # restart the daemons that advertise our name--this list may be
     # incomplete.
     # Should restart systemd-logind as well, but apparent bug causes Gnome to
     # crash and log out console user when it's restarted on 18.04
-    systemctl reload avahi-daemon.service
+    # Note: reloading avahi-daemon doesn't pick up new name; must restart
+    systemctl restart avahi-daemon.service
     systemctl restart nmbd #systemd-logind.service
     
     # create the ftp_upload directories for code, log and images
@@ -253,9 +256,11 @@ configure() {
     local server="`get_config $cfg cs_name`"
     set_config_value $conf acct "$user@$server"
 
-    # starttunnel conf (we're editing the sh source, here)
-    conf="$our_dir/../tunnel/starttunnel.sh"
+    # starttunnel conf
+    conf="$our_dir/../tunnel/starttunnel"
+    cp "$our_dir/../tunnel/starttunnel.sh" "$conf"
     set_config_value "$conf" ACCT "$user@$server"
+    chmod +x "$conf"
 
     # configure for camera FTP.  It seems that the only simple way to
     # deny login to the camera user but allow the camera user to connect

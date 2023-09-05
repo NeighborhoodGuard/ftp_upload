@@ -32,8 +32,8 @@ import subprocess
 import logging
 import random
 import sys
-import StringIO
-import ConfigParser
+import io
+import configparser
 
 
 class ForceDate(datetime.date):
@@ -213,9 +213,9 @@ class Test(unittest.TestCase):
         #
         sect = "forcedsection"
         conf_str = "[" + sect + "]\n"  + open(test_conf, 'r').read()
-        conf_fp = StringIO.StringIO(conf_str)
-        config = ConfigParser.SafeConfigParser()
-        config.readfp(conf_fp)
+        conf_fp = io.StringIO(conf_str)
+        config = configparser.ConfigParser()
+        config.read_file(conf_fp)
         
         # set up instance vars
         #
@@ -414,7 +414,7 @@ class Test(unittest.TestCase):
         logging.info("waitForThreads: done waiting for all threads")
                         
     def continueTestUpload(self, seconds):
-        print "SleepHook calls back with", seconds
+        print("SleepHook calls back with", seconds)
         SleepHook.removeCallback()
         pass
 
