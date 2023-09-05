@@ -14,8 +14,8 @@ We developed the installer on Ubuntu Dekstop 16.04 LTS, and recommend you use th
         sudo apt-get update
         sudo apt-get upgrade
 
-1. When you run the installation software below, it will check for a private key to access the upload account on the cloud server. If a private key does not exist,
-it will create a key pair for use with the upload account and install the public key on the server and put the private key into the file `~/.ssh/id_rsa` in the maintentance account on the upoad machine.
+1. When you run the installation software below, it will check for the existence of an SSH private key to access the upload account on the cloud server. If a private key does not exist,
+it will create a key pair for use with the upload account, install the public key on the cloud server and put the private key into the file `~/.ssh/id_rsa` in the maintentance account on the upoad machine.
 
     If you already have an SSH private key for the upload account on the cloud server,
 copy the private key into the file `~/.ssh/id_rsa` in the maintenance account now.  If the `.ssh` directory does not exist, create it using the command `mkdir ~/.ssh`.  After copying the private key file into `~/.ssh/id_rsa`, make sure that both the `~/.ssh` directory and the key file are readable only by the maintenance account, e.g., 
